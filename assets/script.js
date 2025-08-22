@@ -76,26 +76,26 @@ jQuery(function($){
     var $s=$(this), val=$s.data('value'), wrap=$s.closest('.vq-video-rate-wrap'), vid=wrap.find('.vq-video-rating').data('video');
     $s.siblings().removeClass('active'); $s.prevAll().addBack().addClass('active');
     $.post(vqAjax.ajaxUrl,{action:'vq_rate_video',nonce:vqAjax.nonce,video_id:vid,rate:val},function(res){
-      if(res && res.success){
-        wrap.find('.vq-avg b').text(res.data.avg);
-        wrap.find('.vq-count').text(' ('+res.data.count+' رای)');
-      }
+        if(res && res.success){
+          wrap.find('.vq-avg').text(res.data.avg);
+          wrap.find('.vq-count').text(res.data.count);
+        }
+      });
     });
   });
-});
 
 
 jQuery(function($){
   $(document).on('click','.vq-video-rating .star',function(){
     var wrap=$(this).closest('.vq-step-card');
     // آپدیت نشان میانگین در هدر کارت اگر وجود داشت
-    setTimeout(function(){
-      var avgText = wrap.find('.vq-video-rate-wrap .vq-avg b').text();
-      if(avgText){ 
-        if(wrap.find('.vq-avg-badge').length){ wrap.find('.vq-avg-badge').text(avgText+'★'); }
-        else { wrap.find('.vq-step-header').append('<span class="vq-avg-badge">'+avgText+'★</span>'); }
-      }
-    }, 200);
+      setTimeout(function(){
+        var avgText = wrap.find('.vq-video-rate-wrap .vq-avg').text();
+        if(avgText){
+          if(wrap.find('.vq-avg-badge').length){ wrap.find('.vq-avg-badge').text(avgText+'★'); }
+          else { wrap.find('.vq-step-header').append('<span class="vq-avg-badge">'+avgText+'★</span>'); }
+        }
+      }, 200);
   });
 });
 
@@ -105,16 +105,16 @@ jQuery(function($){
   $(".vq-video-rate-wrap .vq-video-rating").each(function(){
     var vid=$(this).data('video');
     $.post(vqAjax.ajaxUrl,{action:'vq_get_rating',nonce:vqAjax.nonce,video_id:vid},function(res){
-      if(res && res.success){
-        var wrap=$('.vq-video-rate-wrap').has('[data-video="'+vid+'"]');
-        wrap.find('.vq-avg b').text(res.data.avg);
-        wrap.find('.vq-count').text(' ('+res.data.count+' رای)');
-        var card=wrap.closest('.vq-video-item');
-        if(card.find('.vq-avg-badge').length){ card.find('.vq-avg-badge').text(res.data.avg+'★'); }
-      }
+        if(res && res.success){
+          var wrap=$('.vq-video-rate-wrap').has('[data-video="'+vid+'"]');
+          wrap.find('.vq-avg').text(res.data.avg);
+          wrap.find('.vq-count').text(res.data.count);
+          var card=wrap.closest('.vq-video-item');
+          if(card.find('.vq-avg-badge').length){ card.find('.vq-avg-badge').text(res.data.avg+'★'); }
+        }
+      });
     });
   });
-});
 
 
 /* Duration writer with fallback */
