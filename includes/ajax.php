@@ -43,8 +43,13 @@ add_action('wp_ajax_vq_survey_rate','vq_survey_rate');
 add_action('wp_ajax_nopriv_vq_survey_rate','vq_survey_rate');
 function vq_survey_rate(){
   check_ajax_referer('vq_nonce','nonce');
-  $vid=intval($_POST['video_id']); $rate=intval($_POST['rate']);
-  add_post_meta($vid,'vq_survey_rating',$rate); wp_send_json_success();
+  $vid  = isset($_POST['video_id']) ? intval($_POST['video_id']) : 0;
+  $rate = isset($_POST['rate']) ? max(1, min(5, intval($_POST['rate']))) : 0;
+  if($vid > 0 && $rate > 0){
+    add_post_meta($vid,'vq_survey_rating',$rate);
+    wp_send_json_success();
+  }
+  wp_send_json_error();
 }
 
 
