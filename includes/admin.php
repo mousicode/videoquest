@@ -29,10 +29,6 @@ add_action('add_meta_boxes', function () {
  */
 function vq_render_video_info_metabox($post){
     wp_nonce_field('vq_save_video_info','vq_video_info_nonce');
-    // بسته به نسخه‌های قبلی‌ات یکی از این دو کلید استفاده شده؛ هر دو را می‌خوانیم و همان را ذخیره می‌کنیم.
-    $video_url = get_post_meta($post->ID, '_vq_video_file', true);
-    if (!$video_url) { $video_url = get_post_meta($post->ID, 'vq_video_url', true); }
-
     ?>
     <style>
       .vq-admin-field{margin-bottom:10px}
@@ -46,15 +42,6 @@ function vq_render_video_info_metabox($post){
         <input type="text" id="vq_brand" name="vq_brand" value="<?php echo esc_attr($brand); ?>">
     </div>
 
-    <div class="vq-admin-field">
-        <label for="vq_video_url">لینک ویدیو (mp4)</label>
-        <small>می‌توانی لینک فایل را مستقیماً وارد کنی یا از کتابخانه رسانه آدرس بگیری.</small>
-    </div>
-
-    <div class="vq-admin-field">
-        <label for="vq_cost_per_view">هزینه هر بازدید کامل</label>
-        <input type="number" step="0.01" id="vq_cost_per_view" name="vq_cost_per_view" value="<?php echo esc_attr($cost); ?>">
-    </div>
     <?php
 }
 
@@ -170,20 +157,7 @@ add_action('save_post', function($post_id){
     if ( ! current_user_can('edit_post', $post_id) ) return;
     if ( get_post_type($post_id) !== 'vq_video' ) return;
 
-    // اطلاعات ویدیو
-    if ( isset($_POST['vq_video_info_nonce']) && wp_verify_nonce($_POST['vq_video_info_nonce'],'vq_save_video_info') ){
-        if ( isset($_POST['vq_brand']) ){
-            update_post_meta($post_id, 'vq_brand', sanitize_text_field($_POST['vq_brand']));
-        }
-        if ( isset($_POST['vq_video_url']) && $_POST['vq_video_url'] !== '' ){
-            // هم vq_video_url و هم _vq_video_file را برای سازگاری ذخیره می‌کنیم
-            $url = esc_url_raw($_POST['vq_video_url']);
-            update_post_meta($post_id, 'vq_video_url', $url);
-            update_post_meta($post_id, '_vq_video_file', $url);
-        }
-        if ( isset($_POST['vq_cost_per_view']) ){
-        }
-    }
+
 
     // آزمون
     if ( isset($_POST['vq_quiz_nonce']) && wp_verify_nonce($_POST['vq_quiz_nonce'],'vq_save_quiz') ){
@@ -209,53 +183,3 @@ add_action('save_post', function($post_id){
         }
         update_post_meta($post_id, 'vq_quiz', $clean);
     }
-});
-
-/** صفحه مدیریت اسپانسرها و بودجه‌ها */
-add_action('admin_menu', function(){
-    add_submenu_page(
-        'edit.php?post_type=vq_video',
-        'اسپانسرها',
-        'اسپانسرها',
-        'manage_options',
-        'vq_sponsors',
-        'vq_render_sponsors_page'
-    );
-});
-
-function vq_render_sponsors_page(){
-    if( ! current_user_can('manage_options') ) return;
-
-    if( isset($_POST['vq_sponsor_budgets']) ){
-        check_admin_referer('vq_save_sponsors');
-        $budgets = array();
-        foreach( (array) $_POST['vq_sponsor_budgets'] as $brand=>$budget ){
-            $brand = sanitize_text_field($brand);
-            $budgets[$brand] = floatval($budget);
-        }
-        update_option('vq_sponsor_budgets', $budgets);
-        echo '<div class="updated"><p>ذخیره شد.</p></div>';
-    }
-
-    $budgets = get_option('vq_sponsor_budgets', array());
-
-    $posts = get_posts(array(
-        'post_type'      => 'vq_video',
-        'posts_per_page' => -1,
-        'post_status'    => 'any',
-    ));
-    $brands = array();
-    foreach( $posts as $p ){
-        $b = get_post_meta($p->ID, 'vq_brand', true);
-        if( $b ) $brands[$b] = true;
-    }
-
-    echo '<div class="wrap"><h1>اسپانسرها</h1><form method="post">';
-    wp_nonce_field('vq_save_sponsors');
-    echo '<table class="widefat"><thead><tr><th>برند</th><th>بودجه</th></tr></thead><tbody>';
-    foreach( $brands as $b => $_ ){
-        $val = isset($budgets[$b]) ? $budgets[$b] : '';
-        echo '<tr><td>'.esc_html($b).'</td><td><input type="number" step="0.01" name="vq_sponsor_budgets['.esc_attr($b).']" value="'.esc_attr($val).'"></td></tr>';
-    }
-    echo '</tbody></table><p><input type="submit" class="button-primary" value="ذخیره"></p></form></div>';
-}
