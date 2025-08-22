@@ -273,3 +273,30 @@ function vq_render_sponsors_page(){
     echo '</tbody></table><p><input type="submit" class="button-primary" value="ذخیره"></p></form></div>';
 }
 
+/**
+ * نمایش امتیاز کاربران در لیست کاربران و قابلیت مرتب‌سازی
+ */
+add_filter('manage_users_columns', function($cols){
+    $cols['vq_points'] = 'امتیاز';
+    return $cols;
+});
+
+add_filter('manage_users_custom_column', function($val, $col, $uid){
+    if( 'vq_points' === $col ){
+        return intval( get_user_meta($uid, 'vq_user_points', true) );
+    }
+    return $val;
+}, 10, 3);
+
+add_filter('manage_users_sortable_columns', function($cols){
+    $cols['vq_points'] = 'vq_points';
+    return $cols;
+});
+
+add_action('pre_get_users', function($query){
+    if( 'vq_points' === $query->get('orderby') ){
+        $query->set('meta_key', 'vq_user_points');
+        $query->set('orderby', 'meta_value_num');
+    }
+});
+
