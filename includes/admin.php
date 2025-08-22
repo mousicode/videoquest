@@ -40,7 +40,8 @@ function vq_render_video_info_metabox($post){
     <style>
       .vq-admin-field{margin-bottom:10px}
       .vq-admin-field label{display:block;font-weight:600;margin-bottom:4px}
-      .vq-admin-field input[type="text"]{width:100%}
+      .vq-admin-field input[type="text"],
+      .vq-admin-field input[type="url"]{width:100%}
     </style>
 
     <div class="vq-admin-field">
@@ -50,7 +51,7 @@ function vq_render_video_info_metabox($post){
 
     <div class="vq-admin-field">
         <label for="vq_video_url">لینک ویدیو (mp4)</label>
-        <input type="text" id="vq_video_url" name="vq_video_url" placeholder="https://..." value="<?php echo esc_url($video_url); ?>">
+        <input type="url" id="vq_video_url" name="vq_video_url" placeholder="https://..." value="<?php echo esc_url($video_url); ?>">
         <small>می‌توانی لینک فایل را مستقیماً وارد کنی یا از کتابخانه رسانه آدرس بگیری.</small>
     </div>
 
@@ -185,7 +186,8 @@ add_action('save_post', function($post_id){
             update_post_meta($post_id, '_vq_video_file', $url);
         }
         if ( isset($_POST['vq_cost_per_view']) ){
-            update_post_meta($post_id, 'vq_cost_per_view', floatval($_POST['vq_cost_per_view']));
+            $cost = max(0, floatval($_POST['vq_cost_per_view']));
+            update_post_meta($post_id, 'vq_cost_per_view', $cost);
         }
     }
 
