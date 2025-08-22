@@ -26,10 +26,6 @@ jQuery(function($){
     wrap.find(".star").removeClass("active"); $(this).prevAll().addBack().addClass("active");
     $.post(vqAjax.ajaxUrl,{action:"vq_survey_rate",nonce:vqAjax.nonce,video_id:vid,rate:rate});
   });
-  $(".vq-next-video").on("click",function(){
-    var next=$(".vq-step-card").eq($(this).data("index")+1);
-    if(next.length){ $('html,body').animate({scrollTop:next.offset().top-50},600); }
-  });
 });
 
 /* === VQ Accordion toggle (minimal) === */
@@ -141,16 +137,14 @@ jQuery(function($){
 /* Unlock next video without refresh */
 jQuery(function($){
   function unlockNext(card){
-    var next=card.next('.vq-video-item');
+    var next=card.next('.vq-step-card');
     if(!next.length) return;
-    var btn=next.find('.vq-toggle.locked');
-    if(btn.length){ btn.prop('disabled',false).removeClass('locked'); }
-    var target=btn.data('target');
-    if(target){ $('#'+target).stop(true,true).slideDown(); }
+    next.find('.vq-locked').hide();
+    next.find('.vq-video-wrap').show();
     $('html,body').animate({scrollTop: next.offset().top-60},400);
   }
-  $(document).on('click','.vq-next, .vq-next-video',function(e){
+  $(document).on('click','.vq-next-video',function(e){
     e.preventDefault();
-    unlockNext($(this).closest('.vq-video-item'));
+    unlockNext($(this).closest('.vq-step-card'));
   });
 });
