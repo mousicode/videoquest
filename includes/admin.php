@@ -29,9 +29,6 @@ add_action('add_meta_boxes', function () {
  */
 function vq_render_video_info_metabox($post){
     wp_nonce_field('vq_save_video_info','vq_video_info_nonce');
-
-    $brand = get_post_meta($post->ID, 'vq_brand', true);
-    $cost  = get_post_meta($post->ID, 'vq_cost_per_view', true);
     // بسته به نسخه‌های قبلی‌ات یکی از این دو کلید استفاده شده؛ هر دو را می‌خوانیم و همان را ذخیره می‌کنیم.
     $video_url = get_post_meta($post->ID, '_vq_video_file', true);
     if (!$video_url) { $video_url = get_post_meta($post->ID, 'vq_video_url', true); }
@@ -51,7 +48,6 @@ function vq_render_video_info_metabox($post){
 
     <div class="vq-admin-field">
         <label for="vq_video_url">لینک ویدیو (mp4)</label>
-        <input type="url" id="vq_video_url" name="vq_video_url" placeholder="https://..." value="<?php echo esc_url($video_url); ?>">
         <small>می‌توانی لینک فایل را مستقیماً وارد کنی یا از کتابخانه رسانه آدرس بگیری.</small>
     </div>
 
@@ -186,8 +182,6 @@ add_action('save_post', function($post_id){
             update_post_meta($post_id, '_vq_video_file', $url);
         }
         if ( isset($_POST['vq_cost_per_view']) ){
-            $cost = max(0, floatval($_POST['vq_cost_per_view']));
-            update_post_meta($post_id, 'vq_cost_per_view', $cost);
         }
     }
 
@@ -265,4 +259,3 @@ function vq_render_sponsors_page(){
     }
     echo '</tbody></table><p><input type="submit" class="button-primary" value="ذخیره"></p></form></div>';
 }
-

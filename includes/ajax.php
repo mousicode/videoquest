@@ -10,8 +10,6 @@ function vq_mark_viewed(){
   $already = get_user_meta($uid,"vq_viewed_$vid",true);
   if(!$already){
     update_user_meta($uid,"vq_viewed_$vid",true);
-    $brand = get_post_meta($vid,'vq_brand',true);
-    $cost  = floatval(get_post_meta($vid,'vq_cost_per_view',true));
     if($brand && $cost>0){
       $budgets = get_option('vq_sponsor_budgets',array());
       $current = isset($budgets[$brand]) ? floatval($budgets[$brand]) : 0;
