@@ -1,0 +1,20 @@
+name: Build & Release ZIP
+on:
+  push:
+    tags: ['v*.*.*']
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Build ZIP
+        run: |
+          mkdir -p dist
+          git archive --format=zip --output dist/videoquest.zip HEAD
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/videoquest.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
