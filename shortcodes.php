@@ -78,7 +78,11 @@ function vq_video_list_shortcode($atts){
 
       echo '<div class="vq-step-body">';
 
-      if( $can_view ){
+      if( ! $can_view ){
+        echo '<div class="vq-locked">🔒 باز می‌شود پس از مشاهده قبلی</div>';
+      }
+
+      echo '<div class="vq-video-wrap"'.( $can_view ? '' : ' style="display:none"' ).'>';
         echo '<video class="vq-player vq-no-seek" controls preload="metadata" controlsList="nodownload noplaybackrate noremoteplayback" disablePictureInPicture oncontextmenu="return false" data-video-id="'.esc_attr($video_id).'">';
         if( $url ){
           echo '<source src="'.esc_url($url).'" type="video/mp4">';
@@ -88,9 +92,7 @@ function vq_video_list_shortcode($atts){
         echo '<div class="vq-video-meta">مدت: <span class="vq-duration" data-video-id="'.esc_attr($video_id).'">--:--</span></div>';
 
         echo '<button class="vq-next-step vq-start-quiz" style="display:none" data-target="quiz-'.esc_attr($index).'">شروع آزمون</button>';
-      } else {
-        echo '<div class="vq-locked">🔒 باز می‌شود پس از مشاهده قبلی</div>';
-      }
+      echo '</div>'; // .vq-video-wrap
 
       // آزمون
       $quiz = get_post_meta($video_id, 'vq_quiz', true);
@@ -112,14 +114,17 @@ function vq_video_list_shortcode($atts){
 
       // امتیازدهی + خلاصه امتیاز
       echo '<div class="vq-survey-step" style="display:none" id="survey-'.esc_attr($index).'">';
-        echo '<p>کیفیت آزمون را ارزیابی کنید:</p><div class="vq-survey-rating" data-video="'.esc_attr($video_id).'">';
-          for($i=1;$i<=5;$i++){
-            echo '<span class="star" data-value="'.esc_attr($i).'">★</span>';
-          }
-        echo '</div>';
+        echo '<p>کیفیت آزمون را ارزیابی کنید:</p>';
+        echo '<div class="vq-video-rate-wrap">';
+          echo '<div class="vq-video-rating" data-video="'.esc_attr($video_id).'">';
+            for($i=1;$i<=5;$i++){
+              echo '<span class="star" data-value="'.esc_attr($i).'">★</span>';
+            }
+          echo '</div>';
 
-        // ✅ نمایش میانگین و تعداد رأی (JS آن را زنده آپدیت می‌کند)
-        echo '<div class="vq-rating-summary">میانگین: <b class="vq-avg">'.esc_html($avg).'</b> از 5 · <span class="vq-count">'.intval($cnt).'</span> رای</div>';
+          // ✅ نمایش میانگین و تعداد رأی (JS آن را زنده آپدیت می‌کند)
+          echo '<div class="vq-rating-summary">میانگین: <b class="vq-avg">'.esc_html($avg).'</b> از 5 · <span class="vq-count">'.intval($cnt).'</span> رای</div>';
+        echo '</div>'; // .vq-video-rate-wrap
 
         echo '<button class="vq-next-video" data-index="'.esc_attr($index).'">رفتن به ویدیو بعدی</button>';
       echo '</div>'; // .vq-survey-step
