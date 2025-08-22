@@ -112,14 +112,17 @@ function vq_video_list_shortcode($atts){
 
       // امتیازدهی + خلاصه امتیاز
       echo '<div class="vq-survey-step" style="display:none" id="survey-'.esc_attr($index).'">';
-        echo '<p>کیفیت آزمون را ارزیابی کنید:</p><div class="vq-survey-rating" data-video="'.esc_attr($video_id).'">';
-          for($i=1;$i<=5;$i++){
-            echo '<span class="star" data-value="'.esc_attr($i).'">★</span>';
-          }
-        echo '</div>';
+        echo '<p>کیفیت آزمون را ارزیابی کنید:</p>';
+        echo '<div class="vq-video-rate-wrap">';
+          echo '<div class="vq-video-rating" data-video="'.esc_attr($video_id).'">';
+            for($i=1;$i<=5;$i++){
+              echo '<span class="star" data-value="'.esc_attr($i).'">★</span>';
+            }
+          echo '</div>';
 
-        // ✅ نمایش میانگین و تعداد رأی (JS آن را زنده آپدیت می‌کند)
-        echo '<div class="vq-rating-summary">میانگین: <b class="vq-avg">'.esc_html($avg).'</b> از 5 · <span class="vq-count">'.intval($cnt).'</span> رای</div>';
+          // ✅ نمایش میانگین و تعداد رأی (JS آن را زنده آپدیت می‌کند)
+          echo '<div class="vq-rating-summary">میانگین: <b class="vq-avg">'.esc_html($avg).'</b> از 5 · <span class="vq-count">'.intval($cnt).'</span> رای</div>';
+        echo '</div>'; // .vq-video-rate-wrap
 
         echo '<button class="vq-next-video" data-index="'.esc_attr($index).'">رفتن به ویدیو بعدی</button>';
       echo '</div>'; // .vq-survey-step
