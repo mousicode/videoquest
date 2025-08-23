@@ -30,8 +30,10 @@ add_action('add_meta_boxes', function () {
 function vq_render_video_info_metabox($post){
     wp_nonce_field('vq_save_video_info','vq_video_info_nonce');
 
-    $brand = get_post_meta($post->ID, 'vq_brand', true);
-    $cost  = get_post_meta($post->ID, 'vq_cost_per_view', true);
+    $brand  = get_post_meta($post->ID, 'vq_brand', true);
+    $cost   = get_post_meta($post->ID, 'vq_cost_per_view', true);
+    $points = get_post_meta($post->ID, 'vq_reward_points', true);
+    if ($points === '') $points = 100;
     // بسته به نسخه‌های قبلی‌ات یکی از این دو کلید استفاده شده؛ هر دو را می‌خوانیم و همان را ذخیره می‌کنیم.
     $video_url = get_post_meta($post->ID, '_vq_video_file', true);
     if (!$video_url) { $video_url = get_post_meta($post->ID, 'vq_video_url', true); }
@@ -57,6 +59,11 @@ function vq_render_video_info_metabox($post){
     <div class="vq-admin-field">
         <label for="vq_cost_per_view">هزینه هر بازدید کامل</label>
         <input type="number" step="0.01" id="vq_cost_per_view" name="vq_cost_per_view" value="<?php echo esc_attr($cost); ?>">
+    </div>
+
+    <div class="vq-admin-field">
+        <label for="vq_reward_points">امتیاز مشاهده کامل</label>
+        <input type="number" id="vq_reward_points" name="vq_reward_points" value="<?php echo esc_attr($points); ?>">
     </div>
     <?php
 }
@@ -186,6 +193,9 @@ add_action('save_post', function($post_id){
         }
         if ( isset($_POST['vq_cost_per_view']) ){
             update_post_meta($post_id, 'vq_cost_per_view', floatval($_POST['vq_cost_per_view']));
+        }
+        if ( isset($_POST['vq_reward_points']) ){
+            update_post_meta($post_id, 'vq_reward_points', intval($_POST['vq_reward_points']));
         }
     }
 

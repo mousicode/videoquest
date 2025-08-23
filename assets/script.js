@@ -4,7 +4,11 @@ jQuery(function($){
     var card=$(this).closest('.vq-step-card');
     updateProgress(card,33);
     $(this).siblings(".vq-start-quiz").show();
-    $.post(vqAjax.ajaxUrl,{action:"vq_mark_viewed",nonce:vqAjax.nonce,video_id:$(this).data("video-id")});
+    $.post(vqAjax.ajaxUrl,{action:"vq_mark_viewed",nonce:vqAjax.nonce,video_id:$(this).data("video-id")},function(res){
+      if(res&&res.success&&res.data&&res.data.awarded){
+        alert('شما '+res.data.awarded+' امتیاز دریافت کردید! امتیاز کل: '+res.data.total);
+      }
+    });
   });
   $(".vq-start-quiz").on("click",function(){
     $("#"+$(this).data("target")).slideDown(); $(this).hide();
