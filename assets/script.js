@@ -44,30 +44,28 @@ jQuery(function($){
 
 /* === Prevent Seek & Show Duration (non-breaking) === */
 jQuery(function($){
-  function vqFmt(sec){
-    sec = Math.floor(sec || 0);
-    var h = Math.floor(sec / 3600),
-        m = Math.floor((sec % 3600) / 60),
-        s = sec % 60;
-    return (h > 0 ? (h + ":" + (m < 10 ? "0" : "")) : "") + m + ":" + (s < 10 ? "0" : "") + s;
-  }
+  function vqFmt(sec){sec=Math.floor(sec||0);var h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return (h>0?(h+":"+(m<10?"0":"")):"")+m+":"+(s<10?"0":"")+s;}
   $(".vq-player.vq-no-seek").each(function(){
-    var v = this,
-        $v = $(this),
-        last = 0,
-        lock = false,
-        id = $v.data("video-id");
-    v.addEventListener("loadedmetadata", function(){ $('.vq-duration[data-video-id="'+id+'"]').text(vqFmt(v.duration)); });
-    v.addEventListener("seeking", function(){ if(lock) return; lock = true; v.currentTime = last; lock = false; });
-    v.addEventListener("timeupdate", function(){ last = v.currentTime; });
-    $v.on("keydown", function(e){
-      var k = e.key.toLowerCase();
-      if(['arrowleft','arrowright','home','end','j','l'].includes(k)){
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    });
-    $v.on("mousedown touchstart", function(){ setTimeout(function(){ v.currentTime = last; }, 0); });
+    var v=this,$v=$(this),last=0,lock=false,id=$v.data("video-id");
+    v.addEventListener("loadedmetadata",function(){ $('.vq-duration[data-video-id="'+id+'"]').text(vqFmt(v.duration)); });
+    v.addEventListener("seeking",function(){ if(lock) return; lock=true; v.currentTime=last; lock=false; });
+    v.addEventListener("timeupdate",function(){ last=v.currentTime; });
+    $v.on("keydown",function(e){var k=e.key.toLowerCase(); if(['arrowleft','arrowright','home','end','j','l'].includes(k)){e.preventDefault();e.stopPropagation();}});
+    $v.on("mousedown touchstart",function(){ setTimeout(function(){ v.currentTime=last; },0); });
+  });
+});
+
+
+/* === Prevent Seek & Show Duration (non-breaking) === */
+jQuery(function($){
+  function vqFmt(sec){sec=Math.floor(sec||0);var h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return (h>0?(h+":"+(m<10?"0":"")):"")+m+":"+(s<10?"0":"")+s;}
+  $(".vq-player.vq-no-seek").each(function(){
+    var v=this,$v=$(this),last=0,lock=false,id=$v.data("video-id");
+    v.addEventListener("loadedmetadata",function(){ $('.vq-duration[data-video-id="'+id+'"]').text(vqFmt(v.duration)); });
+    v.addEventListener("seeking",function(){ if(lock) return; lock=true; v.currentTime=last; lock=false; });
+    v.addEventListener("timeupdate",function(){ last=v.currentTime; });
+    $v.on("keydown",function(e){var k=e.key.toLowerCase(); if(['arrowleft','arrowright','home','end','j','l'].includes(k)){e.preventDefault();e.stopPropagation();}});
+    $v.on("mousedown touchstart",function(){ setTimeout(function(){ v.currentTime=last; },0); });
   });
 });
 
@@ -111,9 +109,8 @@ jQuery(function($){
           var wrap=$('.vq-video-rate-wrap').has('[data-video="'+vid+'"]');
           wrap.find('.vq-avg').text(res.data.avg);
           wrap.find('.vq-count').text(res.data.count);
-          var card=wrap.closest('.vq-step-card');
+          var card=wrap.closest('.vq-video-item');
           if(card.find('.vq-avg-badge').length){ card.find('.vq-avg-badge').text(res.data.avg+'★'); }
-          else { card.find('.vq-step-header').append('<span class="vq-avg-badge">'+res.data.avg+'★</span>'); }
         }
       });
     });
