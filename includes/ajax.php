@@ -8,6 +8,8 @@ function vq_mark_viewed(){
   $vid = intval($_POST['video_id']);
   $uid = get_current_user_id();
   $already = get_user_meta($uid,"vq_viewed_$vid",true);
+  $total_points = intval(get_user_meta($uid,'vq_points',true));
+  $awarded = 0;
   if(!$already){
     update_user_meta($uid,"vq_viewed_$vid",true);
     $brand = get_post_meta($vid,'vq_brand',true);
@@ -20,8 +22,13 @@ function vq_mark_viewed(){
         update_option('vq_sponsor_budgets',$budgets);
       }
     }
+    $points = intval(get_post_meta($vid,'vq_reward_points',true));
+    if($points <= 0) $points = 100;
+    $total_points += $points;
+    update_user_meta($uid,'vq_points',$total_points);
+    $awarded = $points;
   }
-  wp_send_json_success();
+  wp_send_json_success(array('awarded'=>$awarded,'total'=>$total_points));
 }
 // Submit quiz
 add_action('wp_ajax_vq_submit_quiz','vq_submit_quiz');

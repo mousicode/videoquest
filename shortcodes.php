@@ -56,6 +56,8 @@ function vq_video_list_shortcode($atts){
 
     $viewed = get_user_meta($user_id, "vq_viewed_{$video_id}", true);
     $brand  = get_post_meta($video_id, 'vq_brand', true);
+    $points = get_post_meta($video_id, 'vq_reward_points', true);
+    if ($points === '') $points = 100;
 
     // فایل ویدیو (MP4)
     $url = get_post_meta($video_id, '_vq_video_file', true);
@@ -89,7 +91,8 @@ function vq_video_list_shortcode($atts){
         }
         echo '</video>';
 
-        echo '<div class="vq-video-meta">مدت: <span class="vq-duration" data-video-id="'.esc_attr($video_id).'">--:--</span></div>';
+        echo '<div class="vq-video-meta">مدت: <span class="vq-duration" data-video-id="'.esc_attr($video_id).'">--:--</span>';
+        echo ' · امتیاز: '.intval($points).'</div>';
 
         echo '<button class="vq-next-step vq-start-quiz" style="display:none" data-target="quiz-'.esc_attr($index).'">شروع آزمون</button>';
       echo '</div>'; // .vq-video-wrap
