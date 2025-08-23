@@ -111,8 +111,9 @@ jQuery(function($){
           var wrap=$('.vq-video-rate-wrap').has('[data-video="'+vid+'"]');
           wrap.find('.vq-avg').text(res.data.avg);
           wrap.find('.vq-count').text(res.data.count);
-          var card=wrap.closest('.vq-video-item');
+          var card=wrap.closest('.vq-step-card');
           if(card.find('.vq-avg-badge').length){ card.find('.vq-avg-badge').text(res.data.avg+'★'); }
+          else { card.find('.vq-step-header').append('<span class="vq-avg-badge">'+res.data.avg+'★</span>'); }
         }
       });
     });
