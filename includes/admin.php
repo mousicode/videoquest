@@ -29,19 +29,18 @@ add_action('add_meta_boxes', function () {
  */
 function vq_render_video_info_metabox($post){
     wp_nonce_field('vq_save_video_info','vq_video_info_nonce');
-
     $brand  = get_post_meta($post->ID, 'vq_brand', true);
     $cost   = get_post_meta($post->ID, 'vq_cost_per_view', true);
     $reward = get_post_meta($post->ID, 'vq_reward_points', true);
     // بسته به نسخه‌های قبلی‌ات یکی از این دو کلید استفاده شده؛ هر دو را می‌خوانیم و همان را ذخیره می‌کنیم.
     $video_url = get_post_meta($post->ID, '_vq_video_file', true);
     if (!$video_url) { $video_url = get_post_meta($post->ID, 'vq_video_url', true); }
-
     ?>
     <style>
       .vq-admin-field{margin-bottom:10px}
       .vq-admin-field label{display:block;font-weight:600;margin-bottom:4px}
-      .vq-admin-field input[type="text"]{width:100%}
+      .vq-admin-field input[type="text"],
+      .vq-admin-field input[type="url"]{width:100%}
     </style>
 
     <div class="vq-admin-field">
@@ -299,4 +298,3 @@ add_action('pre_get_users', function($query){
         $query->set('orderby', 'meta_value_num');
     }
 });
-
