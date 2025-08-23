@@ -183,3 +183,4 @@ add_action('save_post', function($post_id){
         }
         update_post_meta($post_id, 'vq_quiz', $clean);
     }
+});
