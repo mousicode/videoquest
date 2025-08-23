@@ -220,7 +220,7 @@ function vq_top_users_shortcode($atts){
   if( !empty($users) ){
     foreach( $users as $u ){
       $pts = intval(get_user_meta($u->ID, 'vq_user_points', true));
-      echo '<div class="vq-top-user"><span class="vq-top-name">'.esc_html($u->display_name).'</span> <span class="vq-top-points">'.esc_html($pts)."</span></div>";
+      echo '<div class="vq-top-user"><span class="vq-top-name">' . esc_html($u->display_name) . '</span> <span class="vq-top-points">' . esc_html($pts) . '</span></div>';
     }
   } else {
     echo '<div class="vq-top-user">کاربری یافت نشد.</div>';
