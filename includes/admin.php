@@ -30,7 +30,9 @@ add_action('add_meta_boxes', function () {
 function vq_render_video_info_metabox($post){
     wp_nonce_field('vq_save_video_info','vq_video_info_nonce');
 
-    $brand = get_post_meta($post->ID, 'vq_brand', true);
+    $brand  = get_post_meta($post->ID, 'vq_brand', true);
+    $cost   = get_post_meta($post->ID, 'vq_cost_per_view', true);
+    $reward = get_post_meta($post->ID, 'vq_reward_points', true);
     // بسته به نسخه‌های قبلی‌ات یکی از این دو کلید استفاده شده؛ هر دو را می‌خوانیم و همان را ذخیره می‌کنیم.
     $video_url = get_post_meta($post->ID, '_vq_video_file', true);
     if (!$video_url) { $video_url = get_post_meta($post->ID, 'vq_video_url', true); }
@@ -51,6 +53,16 @@ function vq_render_video_info_metabox($post){
         <label for="vq_video_url">لینک ویدیو (mp4)</label>
         <input type="text" id="vq_video_url" name="vq_video_url" placeholder="https://..." value="<?php echo esc_url($video_url); ?>">
         <small>می‌توانی لینک فایل را مستقیماً وارد کنی یا از کتابخانه رسانه آدرس بگیری.</small>
+    </div>
+
+    <div class="vq-admin-field">
+        <label for="vq_cost_per_view">هزینه هر بازدید کامل</label>
+        <input type="number" step="0.01" id="vq_cost_per_view" name="vq_cost_per_view" value="<?php echo esc_attr($cost); ?>">
+    </div>
+
+    <div class="vq-admin-field">
+        <label for="vq_reward_points">امتیاز برای کاربر پس از مشاهده کامل</label>
+        <input type="number" id="vq_reward_points" name="vq_reward_points" value="<?php echo esc_attr($reward); ?>">
     </div>
     <?php
 }
@@ -178,6 +190,12 @@ add_action('save_post', function($post_id){
             update_post_meta($post_id, 'vq_video_url', $url);
             update_post_meta($post_id, '_vq_video_file', $url);
         }
+        if ( isset($_POST['vq_cost_per_view']) ){
+            update_post_meta($post_id, 'vq_cost_per_view', floatval($_POST['vq_cost_per_view']));
+        }
+        if ( isset($_POST['vq_reward_points']) ){
+            update_post_meta($post_id, 'vq_reward_points', intval($_POST['vq_reward_points']));
+        }
     }
 
     // آزمون
@@ -204,4 +222,81 @@ add_action('save_post', function($post_id){
         }
         update_post_meta($post_id, 'vq_quiz', $clean);
     }
+}); // end save_post handler
+
+/** صفحه مدیریت اسپانسرها و بودجه‌ها */
+add_action('admin_menu', function(){
+    add_submenu_page(
+        'edit.php?post_type=vq_video',
+        'اسپانسرها',
+        'اسپانسرها',
+        'manage_options',
+        'vq_sponsors',
+        'vq_render_sponsors_page'
+    );
 });
+
+function vq_render_sponsors_page(){
+    if( ! current_user_can('manage_options') ) return;
+
+    if( isset($_POST['vq_sponsor_budgets']) ){
+        check_admin_referer('vq_save_sponsors');
+        $budgets = array();
+        foreach( (array) $_POST['vq_sponsor_budgets'] as $brand=>$budget ){
+            $brand = sanitize_text_field($brand);
+            $budgets[$brand] = floatval($budget);
+        }
+        update_option('vq_sponsor_budgets', $budgets);
+        echo '<div class="updated"><p>ذخیره شد.</p></div>';
+    }
+
+    $budgets = get_option('vq_sponsor_budgets', array());
+
+    $posts = get_posts(array(
+        'post_type'      => 'vq_video',
+        'posts_per_page' => -1,
+        'post_status'    => 'any',
+    ));
+    $brands = array();
+    foreach( $posts as $p ){
+        $b = get_post_meta($p->ID, 'vq_brand', true);
+        if( $b ) $brands[$b] = true;
+    }
+
+    echo '<div class="wrap"><h1>اسپانسرها</h1><form method="post">';
+    wp_nonce_field('vq_save_sponsors');
+    echo '<table class="widefat"><thead><tr><th>برند</th><th>بودجه</th></tr></thead><tbody>';
+    foreach( $brands as $b => $_ ){
+        $val = isset($budgets[$b]) ? $budgets[$b] : '';
+        echo '<tr><td>'.esc_html($b).'</td><td><input type="number" step="0.01" name="vq_sponsor_budgets['.esc_attr($b).']" value="'.esc_attr($val).'"></td></tr>';
+    }
+    echo '</tbody></table><p><input type="submit" class="button-primary" value="ذخیره"></p></form></div>';
+}
+
+/**
+ * نمایش امتیاز کاربران در لیست کاربران و قابلیت مرتب‌سازی
+ */
+add_filter('manage_users_columns', function($cols){
+    $cols['vq_points'] = 'امتیاز';
+    return $cols;
+});
+
+add_filter('manage_users_custom_column', function($val, $col, $uid){
+    if( 'vq_points' === $col ){
+        return intval( get_user_meta($uid, 'vq_user_points', true) );
+    }
+    return $val;
+}, 10, 3);
+
+add_filter('manage_users_sortable_columns', function($cols){
+    $cols['vq_points'] = 'vq_points';
+    return $cols;
+});
+
+add_action('pre_get_users', function($query){
+    if( 'vq_points' === $query->get('orderby') ){
+        $query->set('meta_key', 'vq_user_points');
+        $query->set('orderby', 'meta_value_num');
+    }
+});
+

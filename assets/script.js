@@ -26,10 +26,6 @@ jQuery(function($){
     wrap.find(".star").removeClass("active"); $(this).prevAll().addBack().addClass("active");
     $.post(vqAjax.ajaxUrl,{action:"vq_survey_rate",nonce:vqAjax.nonce,video_id:vid,rate:rate});
   });
-  $(".vq-next-video").on("click",function(){
-    var next=$(".vq-step-card").eq($(this).data("index")+1);
-    if(next.length){ $('html,body').animate({scrollTop:next.offset().top-50},600); }
-  });
 });
 
 /* === VQ Accordion toggle (minimal) === */
@@ -48,28 +44,30 @@ jQuery(function($){
 
 /* === Prevent Seek & Show Duration (non-breaking) === */
 jQuery(function($){
-  function vqFmt(sec){sec=Math.floor(sec||0);var h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return (h>0?(h+":"+(m<10?"0":"")):"")+m+":"+(s<10?"0":"")+s;}
+  function vqFmt(sec){
+    sec = Math.floor(sec || 0);
+    var h = Math.floor(sec / 3600),
+        m = Math.floor((sec % 3600) / 60),
+        s = sec % 60;
+    return (h > 0 ? (h + ":" + (m < 10 ? "0" : "")) : "") + m + ":" + (s < 10 ? "0" : "") + s;
+  }
   $(".vq-player.vq-no-seek").each(function(){
-    var v=this,$v=$(this),last=0,lock=false,id=$v.data("video-id");
-    v.addEventListener("loadedmetadata",function(){ $('.vq-duration[data-video-id="'+id+'"]').text(vqFmt(v.duration)); });
-    v.addEventListener("seeking",function(){ if(lock) return; lock=true; v.currentTime=last; lock=false; });
-    v.addEventListener("timeupdate",function(){ last=v.currentTime; });
-    $v.on("keydown",function(e){var k=e.key.toLowerCase(); if(['arrowleft','arrowright','home','end','j','l'].includes(k)){e.preventDefault();e.stopPropagation();}});
-    $v.on("mousedown touchstart",function(){ setTimeout(function(){ v.currentTime=last; },0); });
-  });
-});
-
-
-/* === Prevent Seek & Show Duration (non-breaking) === */
-jQuery(function($){
-  function vqFmt(sec){sec=Math.floor(sec||0);var h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return (h>0?(h+":"+(m<10?"0":"")):"")+m+":"+(s<10?"0":"")+s;}
-  $(".vq-player.vq-no-seek").each(function(){
-    var v=this,$v=$(this),last=0,lock=false,id=$v.data("video-id");
-    v.addEventListener("loadedmetadata",function(){ $('.vq-duration[data-video-id="'+id+'"]').text(vqFmt(v.duration)); });
-    v.addEventListener("seeking",function(){ if(lock) return; lock=true; v.currentTime=last; lock=false; });
-    v.addEventListener("timeupdate",function(){ last=v.currentTime; });
-    $v.on("keydown",function(e){var k=e.key.toLowerCase(); if(['arrowleft','arrowright','home','end','j','l'].includes(k)){e.preventDefault();e.stopPropagation();}});
-    $v.on("mousedown touchstart",function(){ setTimeout(function(){ v.currentTime=last; },0); });
+    var v = this,
+        $v = $(this),
+        last = 0,
+        lock = false,
+        id = $v.data("video-id");
+    v.addEventListener("loadedmetadata", function(){ $('.vq-duration[data-video-id="'+id+'"]').text(vqFmt(v.duration)); });
+    v.addEventListener("seeking", function(){ if(lock) return; lock = true; v.currentTime = last; lock = false; });
+    v.addEventListener("timeupdate", function(){ last = v.currentTime; });
+    $v.on("keydown", function(e){
+      var k = e.key.toLowerCase();
+      if(['arrowleft','arrowright','home','end','j','l'].includes(k)){
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    });
+    $v.on("mousedown touchstart", function(){ setTimeout(function(){ v.currentTime = last; }, 0); });
   });
 });
 
@@ -80,26 +78,26 @@ jQuery(function($){
     var $s=$(this), val=$s.data('value'), wrap=$s.closest('.vq-video-rate-wrap'), vid=wrap.find('.vq-video-rating').data('video');
     $s.siblings().removeClass('active'); $s.prevAll().addBack().addClass('active');
     $.post(vqAjax.ajaxUrl,{action:'vq_rate_video',nonce:vqAjax.nonce,video_id:vid,rate:val},function(res){
-      if(res && res.success){
-        wrap.find('.vq-avg b').text(res.data.avg);
-        wrap.find('.vq-count').text(' ('+res.data.count+' رای)');
-      }
+        if(res && res.success){
+          wrap.find('.vq-avg').text(res.data.avg);
+          wrap.find('.vq-count').text(res.data.count);
+        }
+      });
     });
   });
-});
 
 
 jQuery(function($){
   $(document).on('click','.vq-video-rating .star',function(){
     var wrap=$(this).closest('.vq-step-card');
     // آپدیت نشان میانگین در هدر کارت اگر وجود داشت
-    setTimeout(function(){
-      var avgText = wrap.find('.vq-video-rate-wrap .vq-avg b').text();
-      if(avgText){ 
-        if(wrap.find('.vq-avg-badge').length){ wrap.find('.vq-avg-badge').text(avgText+'★'); }
-        else { wrap.find('.vq-step-header').append('<span class="vq-avg-badge">'+avgText+'★</span>'); }
-      }
-    }, 200);
+      setTimeout(function(){
+        var avgText = wrap.find('.vq-video-rate-wrap .vq-avg').text();
+        if(avgText){
+          if(wrap.find('.vq-avg-badge').length){ wrap.find('.vq-avg-badge').text(avgText+'★'); }
+          else { wrap.find('.vq-step-header').append('<span class="vq-avg-badge">'+avgText+'★</span>'); }
+        }
+      }, 200);
   });
 });
 
@@ -109,16 +107,16 @@ jQuery(function($){
   $(".vq-video-rate-wrap .vq-video-rating").each(function(){
     var vid=$(this).data('video');
     $.post(vqAjax.ajaxUrl,{action:'vq_get_rating',nonce:vqAjax.nonce,video_id:vid},function(res){
-      if(res && res.success){
-        var wrap=$('.vq-video-rate-wrap').has('[data-video="'+vid+'"]');
-        wrap.find('.vq-avg b').text(res.data.avg);
-        wrap.find('.vq-count').text(' ('+res.data.count+' رای)');
-        var card=wrap.closest('.vq-video-item');
-        if(card.find('.vq-avg-badge').length){ card.find('.vq-avg-badge').text(res.data.avg+'★'); }
-      }
+        if(res && res.success){
+          var wrap=$('.vq-video-rate-wrap').has('[data-video="'+vid+'"]');
+          wrap.find('.vq-avg').text(res.data.avg);
+          wrap.find('.vq-count').text(res.data.count);
+          var card=wrap.closest('.vq-video-item');
+          if(card.find('.vq-avg-badge').length){ card.find('.vq-avg-badge').text(res.data.avg+'★'); }
+        }
+      });
     });
   });
-});
 
 
 /* Duration writer with fallback */
@@ -141,16 +139,14 @@ jQuery(function($){
 /* Unlock next video without refresh */
 jQuery(function($){
   function unlockNext(card){
-    var next=card.next('.vq-video-item');
+    var next=card.next('.vq-step-card');
     if(!next.length) return;
-    var btn=next.find('.vq-toggle.locked');
-    if(btn.length){ btn.prop('disabled',false).removeClass('locked'); }
-    var target=btn.data('target');
-    if(target){ $('#'+target).stop(true,true).slideDown(); }
+    next.find('.vq-locked').hide();
+    next.find('.vq-video-wrap').show();
     $('html,body').animate({scrollTop: next.offset().top-60},400);
   }
-  $(document).on('click','.vq-next, .vq-next-video',function(e){
+  $(document).on('click','.vq-next-video',function(e){
     e.preventDefault();
-    unlockNext($(this).closest('.vq-video-item'));
+    unlockNext($(this).closest('.vq-step-card'));
   });
 });
