@@ -68,10 +68,10 @@ function vq_video_list_shortcode($atts){
       $url   = get_post_meta($vid, '_vq_video_file', true);     // MP4
       $title = get_the_title();
       $thumb = get_the_post_thumbnail_url($vid,'medium') ?: ''; // اگر داری
-      $sum   = get_post_meta($vid,'vq_video_rating_sum',true);
+      $avg   = get_post_meta($vid,'vq_video_rating_avg',true);
       $cnt   = get_post_meta($vid,'vq_video_rating_count',true);
-      if ($sum === '' ) $sum = 0; if ($cnt === '' ) $cnt = 0;
-      $videos[] = compact('vid','url','title','thumb','sum','cnt');
+      if ($avg === '' ) $avg = 0; if ($cnt === '' ) $cnt = 0;
+      $videos[] = compact('vid','url','title','thumb','avg','cnt');
     }
     wp_reset_postdata();
 
@@ -94,7 +94,7 @@ function vq_video_list_shortcode($atts){
         <div class="vq-video-meta">
           مدت: <span class="vq-duration" data-video-id="<?php echo esc_attr($first['vid']); ?>">—</span>
           <span class="vq-sep">•</span>
-          امتیاز: <b class="vq-sum"><?php echo esc_html($first['sum']); ?></b> (<?php echo intval($first['cnt']); ?> رأی)
+          امتیاز: <b class="vq-avg"><?php echo esc_html($first['avg']); ?></b> (<?php echo intval($first['cnt']); ?> رأی)
         </div>
 
         <!-- اینجا همه فرم‌های کوییز/نظرسنجی را برای هر ویدئو رندر می‌کنیم اما مخفی؛ فقط اکتیو نمایش داده می‌شود -->
@@ -124,7 +124,7 @@ function vq_video_list_shortcode($atts){
               <span class="vq-item-sub">
                 <span class="vq-duration" data-video-id="<?php echo esc_attr($v['vid']); ?>">—</span>
                 <span class="vq-sep">•</span>
-                <span class="vq-sum"><?php echo esc_html($v['sum']); ?></span>
+                <span class="vq-avg"><?php echo esc_html($v['avg']); ?></span>
               </span>
             </div>
           </button>
@@ -154,9 +154,9 @@ function vq_video_list_shortcode($atts){
     $url = get_post_meta($video_id, '_vq_video_file', true);
 
     // امتیاز فعلی برای نمایش اولیه
-    $sum = get_post_meta($video_id, 'vq_video_rating_sum', true);
+    $avg = get_post_meta($video_id, 'vq_video_rating_avg', true);
     $cnt = get_post_meta($video_id, 'vq_video_rating_count', true);
-    if ($sum === '' ) $sum = 0;
+    if ($avg === '' ) $avg = 0;
     if ($cnt === '' ) $cnt = 0;
 
     echo '<div class="vq-step-card" data-step-index="'.esc_attr($index).'">';
@@ -216,8 +216,8 @@ function vq_video_list_shortcode($atts){
             }
           echo '</div>';
 
-          // ✅ نمایش مجموع و تعداد رأی (JS آن را زنده آپدیت می‌کند)
-          echo '<div class="vq-rating-summary">مجموع: <b class="vq-sum">'.esc_html($sum).'</b> · <span class="vq-count">'.intval($cnt).'</span> رای</div>';
+          // ✅ نمایش میانگین و تعداد رأی (JS آن را زنده آپدیت می‌کند)
+          echo '<div class="vq-rating-summary">میانگین: <b class="vq-avg">'.esc_html($avg).'</b> · <span class="vq-count">'.intval($cnt).'</span> رای</div>';
         echo '</div>'; // .vq-video-rate-wrap
 
         echo '<button class="vq-next-video" data-index="'.esc_attr($index).'">رفتن به ویدیو بعدی</button>';
@@ -240,7 +240,7 @@ function vq_video_list_shortcode($atts){
 add_shortcode('vq_video_list','vq_video_list_shortcode');
 
 /**
- * بهترین ویدیوها بر اساس مجموع امتیاز
+ * بهترین ویدیوها بر اساس امتیاز میانگین
  * [vq_top_videos count="10"]
  */
 function vq_top_videos_shortcode($atts){
@@ -250,7 +250,7 @@ function vq_top_videos_shortcode($atts){
     'post_type'      => ['vq_video','videoquest'],
     'post_status'    => 'publish',
     'posts_per_page' => intval($atts['count']),
-    'meta_key'       => 'vq_video_rating_sum',
+    'meta_key'       => 'vq_video_rating_avg',
     'orderby'        => 'meta_value_num',
     'order'          => 'DESC',
   ]);
@@ -260,11 +260,11 @@ function vq_top_videos_shortcode($atts){
   if( $q->have_posts() ){
     while( $q->have_posts() ){ $q->the_post();
       $vid = get_the_ID();
-      $sum = get_post_meta($vid,'vq_video_rating_sum',true);
+      $avg = get_post_meta($vid,'vq_video_rating_avg',true);
       $cnt = get_post_meta($vid,'vq_video_rating_count',true);
-      if ($sum === '' ) $sum = 0;
+      if ($avg === '' ) $avg = 0;
       if ($cnt === '' ) $cnt = 0;
-      echo '<div class="vq-top-item"><span class="vq-top-title">'.esc_html(get_the_title()).'</span> <span class="vq-top-meta">— مجموع: <span class="vq-sum">'.esc_html($sum).'</span> امتیاز · '.intval($cnt).' رای</span></div>';
+      echo '<div class="vq-top-item"><span class="vq-top-title">'.esc_html(get_the_title()).'</span> <span class="vq-top-meta">— میانگین: <span class="vq-avg">'.esc_html($avg).'</span> · '.intval($cnt).' رای</span></div>';
     }
     wp_reset_postdata();
   } else {

@@ -35,15 +35,22 @@ add_action('wp_ajax_vq_submit_quiz','vq_submit_quiz');
 add_action('wp_ajax_nopriv_vq_submit_quiz','vq_submit_quiz');
 function vq_submit_quiz(){
   check_ajax_referer('vq_nonce','nonce');
-  $vid=intval($_POST['video_id']);
-  $answers=isset($_POST['answers'])?(array)$_POST['answers']:array();
-  $quiz=get_post_meta($vid,'vq_quiz',true);
-  if(!is_array($quiz)) $quiz=array();
-  $score=0; $total=count($quiz);
+  $vid     = intval($_POST['video_id']);
+  $uid     = get_current_user_id();
+  $answers = isset($_POST['answers']) ? (array) $_POST['answers'] : array();
+  $quiz    = get_post_meta($vid,'vq_quiz',true);
+  if(!is_array($quiz)) $quiz = array();
+  $score = 0; $total = count($quiz);
   foreach($quiz as $qi=>$q){
     if(isset($answers[$qi]) && intval($answers[$qi])===intval($q['correct'])) $score++;
   }
-  $passed=$score==$total; wp_send_json_success(['score'=>$score,'total'=>$total,'passed'=>$passed]);
+  $passed = ($total > 0) ? (($score / $total) >= 0.7) : false;
+  if($uid){
+    update_user_meta($uid,"vq_quiz_score_$vid", $score);
+    update_user_meta($uid,"vq_quiz_total_$vid", $total);
+    update_user_meta($uid,"vq_quiz_passed_$vid", $passed ? 1 : 0);
+  }
+  wp_send_json_success(['score'=>$score,'total'=>$total,'passed'=>$passed]);
 }
 // Survey rate
 add_action('wp_ajax_vq_survey_rate','vq_survey_rate');

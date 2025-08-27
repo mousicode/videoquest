@@ -57,7 +57,9 @@ jQuery(function($){
     btn.closest(".vq-quiz-step").find(".vq-q").each(function(i,q){ answers[i]=$(q).find("input:checked").val(); });
     $.post(vqAjax.ajaxUrl,{action:"vq_submit_quiz",nonce:vqAjax.nonce,video_id:vid,answers:answers},function(res){
       if(res.success){
-        btn.siblings(".vq-quiz-feedback").show().html(res.data.passed?"✅ ("+res.data.score+"/"+res.data.total+")":"❌ "+res.data.score+"/"+res.data.total);
+        var fb=btn.siblings(".vq-quiz-feedback").show();
+        fb.toggleClass('success',res.data.passed).toggleClass('fail',!res.data.passed)
+          .html(res.data.passed?"✅ ("+res.data.score+"/"+res.data.total+")":"❌ "+res.data.score+"/"+res.data.total);
         btn.hide(); btn.closest(".vq-quiz-step").siblings(".vq-survey-step").slideDown();
         updateProgress(btn.closest('.vq-step-card'),100);
       }
@@ -209,7 +211,7 @@ jQuery(document).on('click', '.vq-survey-rating .star, .vq-video-rating .star', 
       box.find('.vq-avg').text(res.data.avg);
       box.find('.vq-count').text(res.data.count);
       var item = jQuery('#vq-playlist .vq-item[data-vid="'+vid+'"]');
-      if(item.length && item.find('.vq-sum').length){ item.find('.vq-sum').text(res.data.avg); }
+      if(item.length && item.find('.vq-avg').length){ item.find('.vq-avg').text(res.data.avg); }
     }
   });
 });
@@ -243,7 +245,7 @@ jQuery(document).off('click.vqplstars')
       box.find('.vq-avg').text(res.data.avg);
       box.find('.vq-count').text(res.data.count);
       var item = jQuery('#vq-playlist .vq-item[data-vid="'+vid+'"]');
-      if(item.length && item.find('.vq-sum').length){ item.find('.vq-sum').text(res.data.avg); }
+      if(item.length && item.find('.vq-avg').length){ item.find('.vq-avg').text(res.data.avg); }
     }
   });
 });
