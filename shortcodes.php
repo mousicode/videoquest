@@ -183,3 +183,81 @@ function vq_top_videos_shortcode($atts){
   return ob_get_clean();
 }
 add_shortcode('vq_top_videos','vq_top_videos_shortcode');
+
+/**
+ * نمایش گالری ویدیوها به صورت لیست و پخش در یک پلیر
+ * [vq_video_gallery category="all"]
+ */
+function vq_video_gallery_shortcode($atts){
+  $atts = shortcode_atts([
+    'category' => 'all',
+  ], $atts);
+
+  $args = [
+    'post_type'      => ['vq_video','videoquest'],
+    'posts_per_page' => -1,
+    'post_status'    => 'publish',
+    'orderby'        => 'ID',
+    'order'          => 'ASC',
+  ];
+
+  if ( !empty($atts['category']) && $atts['category'] !== 'all' ) {
+    $slug = sanitize_title($atts['category']);
+    $args['tax_query'] = [
+      'relation' => 'OR',
+      [
+        'taxonomy' => 'vq_category',
+        'field'    => 'slug',
+        'terms'    => $slug,
+      ],
+      [
+        'taxonomy' => 'category',
+        'field'    => 'slug',
+        'terms'    => $slug,
+      ],
+    ];
+  }
+
+  $q = new WP_Query($args);
+  if( ! $q->have_posts() ){
+    return '<div class="vq-empty">ویدیویی یافت نشد.</div>';
+  }
+
+  $videos = [];
+  while( $q->have_posts() ){ $q->the_post();
+    $videos[] = [
+      'id'    => get_the_ID(),
+      'title' => get_the_title(),
+      'url'   => get_post_meta(get_the_ID(), '_vq_video_file', true),
+      'thumb' => get_the_post_thumbnail_url(get_the_ID(), 'thumbnail'),
+    ];
+  }
+  wp_reset_postdata();
+
+  $first = $videos[0];
+  ob_start();
+  echo '<div class="vq-gallery">';
+    echo '<div class="vq-gallery-player">';
+      echo '<video id="vq-gallery-player" controls preload="metadata">';
+        if( $first['url'] ){
+          echo '<source src="'.esc_url($first['url']).'" type="video/mp4">';
+        }
+      echo '</video>';
+    echo '</div>';
+
+    echo '<div class="vq-gallery-list">';
+    foreach($videos as $i=>$v){
+      $active = $i===0 ? ' active' : '';
+      echo '<div class="vq-gallery-item'.esc_attr($active).'" data-src="'.esc_url($v['url']).'" data-video-id="'.esc_attr($v['id']).'">';
+        if( $v['thumb'] ){
+          echo '<img src="'.esc_url($v['thumb']).'" alt="">';
+        }
+        echo '<span class="vq-gallery-title">'.esc_html($v['title']).'</span>';
+      echo '</div>';
+    }
+    echo '</div>';
+  echo '</div>';
+
+  return ob_get_clean();
+}
+add_shortcode('vq_video_gallery','vq_video_gallery_shortcode');
