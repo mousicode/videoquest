@@ -213,3 +213,37 @@ jQuery(document).on('click', '.vq-survey-rating .star, .vq-video-rating .star', 
     }
   });
 });
+
+// === VQ-CACHEBUST-MARK === (should appear once in console)
+console.log('VQ patch active:', new Date().toISOString());
+
+// === VQ-PLAYLIST-PATCH: Show quiz after video ends ===
+(function(){
+  var $main = jQuery('#vq-main-player');
+  if($main.length && !$main.data('vqpl-bound')){
+    $main.data('vqpl-bound', true).off('ended.vqpl').on('ended.vqpl', function(){
+      var vid = jQuery(this).data('video-id');
+      var $panel = jQuery('#vq-panels .vq-panel[data-panel="'+vid+'"]');
+      $panel.find('.vq-quiz-step').slideDown();
+    });
+  }
+})();
+
+// === VQ-PLAYLIST-PATCH: Rating stars in playlist layout ===
+jQuery(document).off('click.vqplstars')
+.on('click.vqplstars', '.vq-survey-rating .star, .vq-video-rating .star', function(){
+  var $s = jQuery(this),
+      wrap = $s.closest('.vq-video-rate-wrap').length ? $s.closest('.vq-video-rate-wrap') : $s.parent(),
+      vid  = wrap.find('.vq-video-rating').data('video') || wrap.data('video'),
+      rate = $s.data('value');
+  wrap.find('.star').removeClass('active'); $s.prevAll().addBack().addClass('active');
+  jQuery.post(vqAjax.ajaxUrl, {action:'vq_rate_video', nonce:vqAjax.nonce, video_id:vid, rate:rate}, function(res){
+    if(res && res.success){
+      var box  = jQuery('.vq-video-rate-wrap').has('[data-video="'+vid+'"]');
+      box.find('.vq-avg').text(res.data.avg);
+      box.find('.vq-count').text(res.data.count);
+      var item = jQuery('#vq-playlist .vq-item[data-vid="'+vid+'"]');
+      if(item.length && item.find('.vq-sum').length){ item.find('.vq-sum').text(res.data.avg); }
+    }
+  });
+});

@@ -12,8 +12,8 @@ require_once VQ_PATH . 'shortcodes.php';
 require_once VQ_PATH . 'includes/admin.php';
 require_once VQ_PATH . 'includes/ajax.php';
 function vq_enqueue_assets() {
-    wp_enqueue_style('vq-style', VQ_URL . 'assets/style.css', array(), '6.0');
-    wp_enqueue_script('vq-script', VQ_URL . 'assets/script.js', array('jquery'), '6.0', true);
+    wp_enqueue_style('vq-style', VQ_URL . 'assets/style.css', array(), filemtime(VQ_PATH.'assets/style.css'));
+    wp_enqueue_script('vq-script', VQ_URL . 'assets/script.js', array('jquery'), filemtime(VQ_PATH.'assets/script.js'), true);
     wp_localize_script('vq-script', 'vqAjax', array(
         'ajaxUrl'  => admin_url('admin-ajax.php'),
         'nonce'    => wp_create_nonce('vq_nonce'),
