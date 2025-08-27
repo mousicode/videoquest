@@ -159,3 +159,50 @@ video.vq-no-seek::-webkit-media-controls-current-time-display,
 video.vq-no-seek::-webkit-media-controls-time-remaining-display {
   display: none !important;
 }
+
+/* === Gallery layout === */
+.vq-gallery {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 20px;
+  align-items: flex-start;
+}
+.vq-gallery-player {
+  flex: 1;
+}
+.vq-gallery-player video {
+  width: 100%;
+  border-radius: var(--vq-radius);
+}
+.vq-gallery-player .vq-step-card {
+  margin: 0;
+}
+.vq-gallery-list {
+  width: 280px;
+  max-height: 600px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vq-gallery-item {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 8px;
+  padding: 4px;
+  border: 1px solid var(--vq-border);
+  border-radius: var(--vq-radius);
+}
+.vq-gallery-item.active {
+  background: #f3f4f6;
+}
+.vq-gallery-item img {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.vq-gallery-title {
+  font-size: .9rem;
+}

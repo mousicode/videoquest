@@ -1,6 +1,6 @@
 jQuery(function($){
   function updateProgress(card, percent){ card.find('.vq-progress-bar').css('width', percent+'%'); }
-  $(".vq-player").on("ended",function(){
+  $(document).on("ended",".vq-player",function(){
     var card=$(this).closest('.vq-step-card');
     updateProgress(card,33);
     $(this).siblings(".vq-start-quiz").show();
@@ -10,11 +10,11 @@ jQuery(function($){
       }
     });
   });
-  $(".vq-start-quiz").on("click",function(){
+  $(document).on("click",".vq-start-quiz",function(){
     $("#"+$(this).data("target")).slideDown(); $(this).hide();
     updateProgress($(this).closest('.vq-step-card'),66);
   });
-  $(".vq-quiz-submit").on("click",function(){
+  $(document).on("click",".vq-quiz-submit",function(){
     var btn=$(this),vid=btn.data("video"),answers={};
     btn.closest(".vq-quiz-step").find(".vq-q").each(function(i,q){ answers[i]=$(q).find("input:checked").val(); });
     $.post(vqAjax.ajaxUrl,{action:"vq_submit_quiz",nonce:vqAjax.nonce,video_id:vid,answers:answers},function(res){
@@ -25,7 +25,7 @@ jQuery(function($){
       }
     });
   });
-  $(".vq-survey-rating .star").on("click",function(){
+  $(document).on("click",".vq-survey-rating .star",function(){
     var wrap=$(this).parent(),vid=wrap.data("video"),rate=$(this).data("value");
     wrap.find(".star").removeClass("active"); $(this).prevAll().addBack().addClass("active");
     $.post(vqAjax.ajaxUrl,{action:"vq_survey_rate",nonce:vqAjax.nonce,video_id:vid,rate:rate});
@@ -46,23 +46,9 @@ jQuery(function($){
 });
 
 
+function vqFmt(sec){sec=Math.floor(sec||0);var h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return (h>0?(h+":"+(m<10?"0":"")):"")+m+":"+(s<10?"0":"")+s;}
 /* === Prevent Seek & Show Duration (non-breaking) === */
 jQuery(function($){
-  function vqFmt(sec){sec=Math.floor(sec||0);var h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return (h>0?(h+":"+(m<10?"0":"")):"")+m+":"+(s<10?"0":"")+s;}
-  $(".vq-player.vq-no-seek").each(function(){
-    var v=this,$v=$(this),last=0,lock=false,id=$v.data("video-id");
-    v.addEventListener("loadedmetadata",function(){ $('.vq-duration[data-video-id="'+id+'"]').text(vqFmt(v.duration)); });
-    v.addEventListener("seeking",function(){ if(lock) return; lock=true; v.currentTime=last; lock=false; });
-    v.addEventListener("timeupdate",function(){ last=v.currentTime; });
-    $v.on("keydown",function(e){var k=e.key.toLowerCase(); if(['arrowleft','arrowright','home','end','j','l'].includes(k)){e.preventDefault();e.stopPropagation();}});
-    $v.on("mousedown touchstart",function(){ setTimeout(function(){ v.currentTime=last; },0); });
-  });
-});
-
-
-/* === Prevent Seek & Show Duration (non-breaking) === */
-jQuery(function($){
-  function vqFmt(sec){sec=Math.floor(sec||0);var h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return (h>0?(h+":"+(m<10?"0":"")):"")+m+":"+(s<10?"0":"")+s;}
   $(".vq-player.vq-no-seek").each(function(){
     var v=this,$v=$(this),last=0,lock=false,id=$v.data("video-id");
     v.addEventListener("loadedmetadata",function(){ $('.vq-duration[data-video-id="'+id+'"]').text(vqFmt(v.duration)); });
@@ -142,13 +128,32 @@ jQuery(function($){
 jQuery(function($){
   function unlockNext(card){
     var next=card.next('.vq-step-card');
-    if(!next.length) return;
-    next.find('.vq-locked').hide();
-    next.find('.vq-video-wrap').show();
-    $('html,body').animate({scrollTop: next.offset().top-60},400);
+    if(next.length){
+      next.find('.vq-locked').hide();
+      next.find('.vq-video-wrap').show();
+      $('html,body').animate({scrollTop: next.offset().top-60},400);
+    } else {
+      var current=$('.vq-gallery-item.active');
+      var nextItem=current.next('.vq-gallery-item');
+      if(nextItem.length){ nextItem.trigger('click'); }
+    }
   }
   $(document).on('click','.vq-next-video',function(e){
     e.preventDefault();
     unlockNext($(this).closest('.vq-step-card'));
+  });
+});
+
+/* === Gallery interaction === */
+jQuery(function($){
+  $(document).on('click','.vq-gallery-item',function(e){
+    e.preventDefault();
+    var item=$(this);
+    var vid=item.data('video-id');
+    var tpl=$('#vq-gallery-content-'+vid);
+    if(tpl.length){
+      $('#vq-gallery-main').html(tpl.html());
+    }
+    item.addClass('active').siblings().removeClass('active');
   });
 });
