@@ -223,39 +223,6 @@ function vq_video_gallery_shortcode($atts){
     return '<div class="vq-empty">ویدیویی یافت نشد.</div>';
   }
 
-  $videos = [];
-  while( $q->have_posts() ){ $q->the_post();
-    $videos[] = [
-      'id'    => get_the_ID(),
-      'title' => get_the_title(),
-      'url'   => get_post_meta(get_the_ID(), '_vq_video_file', true),
-      'thumb' => get_the_post_thumbnail_url(get_the_ID(), 'thumbnail'),
-    ];
-  }
-  wp_reset_postdata();
-
-  $first = $videos[0];
-  ob_start();
-  echo '<div class="vq-gallery">';
-    echo '<div class="vq-gallery-player">';
-      echo '<video id="vq-gallery-player" controls preload="metadata">';
-        if( $first['url'] ){
-          echo '<source src="'.esc_url($first['url']).'" type="video/mp4">';
-        }
-      echo '</video>';
-    echo '</div>';
-
-    echo '<div class="vq-gallery-list">';
-    foreach($videos as $i=>$v){
-      $active = $i===0 ? ' active' : '';
-      echo '<div class="vq-gallery-item'.esc_attr($active).'" data-src="'.esc_url($v['url']).'" data-video-id="'.esc_attr($v['id']).'">';
-        if( $v['thumb'] ){
-          echo '<img src="'.esc_url($v['thumb']).'" alt="">';
-        }
-        echo '<span class="vq-gallery-title">'.esc_html($v['title']).'</span>';
-      echo '</div>';
-    }
-    echo '</div>';
   echo '</div>';
 
   return ob_get_clean();
