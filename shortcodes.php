@@ -2,6 +2,20 @@
 if ( ! defined('ABSPATH') ) exit;
 
 /**
+ * رندر محتوای آزمون برای یک ویدئو
+ */
+function vq_render_quiz_panel($video_id){
+  echo '<div class="vq-quiz-step">'.__('اینجا سوالات آزمون ویدئو '.$video_id,'vq').'</div>';
+}
+
+/**
+ * رندر محتوای نظرسنجی برای یک ویدئو
+ */
+function vq_render_survey_panel($video_id){
+  echo '<div class="vq-survey-step">'.__('اینجا نظرسنجی ویدئو '.$video_id,'vq').'</div>';
+}
+
+/**
  * لیست ویدیوها به صورت آکاردئون
  * [vq_video_list category="all"]
  */
@@ -88,10 +102,9 @@ function vq_video_list_shortcode($atts){
           <?php foreach($videos as $v): ?>
             <div class="vq-panel" data-panel="<?php echo esc_attr($v['vid']); ?>" style="<?php echo $v['vid']===$first['vid']?'':'display:none'; ?>">
               <?php
-                // می‌تونی تکه‌های موجودت برای quiz/survey همان کارتی رو اینجا بخونی/بسازی
-                // نمونه خیلی کوتاه (درصورت داشتن متادیتا):
-                echo '<div class="vq-quiz-step">'.__('اینجا سوالات آزمون ویدئو '.$v['vid'],'vq').'</div>';
-                echo '<div class="vq-survey-step">'.__('اینجا نظرسنجی ویدئو '.$v['vid'],'vq').'</div>';
+                // رندر فرم‌های کوییز و نظرسنجی مربوط به هر ویدئو
+                vq_render_quiz_panel($v['vid']);
+                vq_render_survey_panel($v['vid']);
               ?>
             </div>
           <?php endforeach; ?>
