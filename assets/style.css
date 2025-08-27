@@ -101,6 +101,8 @@
   margin-top: 10px;
   font-weight: 600;
 }
+.vq-quiz-feedback.success{ color:#16a34a; }
+.vq-quiz-feedback.fail{ color:#dc2626; }
 
 .vq-survey-rating .star,
 .vq-video-rating .star {
@@ -173,10 +175,12 @@ video.vq-no-seek::-webkit-media-controls-time-remaining-display {
   display:grid; grid-template-columns: 120px 1fr; gap:10px;
   border:1px solid var(--vq-border); border-radius: var(--vq-radius);
   background:#fff; padding:8px; cursor:pointer; text-align:left;
+  transition:background .2s, box-shadow .2s;
 }
 .vq-item img{ width:100%; height:68px; object-fit:cover; border-radius:6px; }
 .vq-item-title{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:.95rem; }
-.vq-item.is-active{ outline:2px solid var(--vq-primary); background:#f0f7ff; }
+.vq-item:hover{ background:#f1f5f9; }
+.vq-item.is-active{ box-shadow:0 0 0 2px var(--vq-primary); background:#f0f7ff; }
 .vq-item-sub{ font-size:.8rem; color: var(--vq-muted); }
 .vq-sep{ padding:0 6px; color:#cbd5e1; }
 
