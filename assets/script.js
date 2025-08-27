@@ -1,4 +1,50 @@
 jQuery(function($){
+  const $pl = $("#vq-playlist");
+  const $v  = $("#vq-main-player");
+  const $t  = $("#vq-now-title");
+
+  if($pl.length && $v.length){
+    $pl.on("click", ".vq-item", function(){
+      const $it   = $(this);
+      const src   = $it.data("src");
+      const vid   = $it.data("vid");
+      const title = $it.data("title")||'';
+      const sum   = $it.data("sum")||0;
+      const count = $it.data("count")||0;
+
+      // 1) سوییچ سورس و شناسه ویدئو
+      if(src){
+        const wasPaused = $v[0].paused;
+        $v.find("source").attr("src", src);
+        $v.attr("data-video-id", vid);
+        $v[0].load();
+        if (!wasPaused) { $v[0].play().catch(()=>{}); } else { $v[0].play().catch(()=>{}); }
+      }
+
+      // 2) عنوان
+      if($t.length) $t.text(title);
+      const $meta = $(".vq-video-meta");
+      if($meta.length){
+        $meta.find('.vq-sum').text(sum);
+        $meta.find('.vq-count').text(count);
+        $meta.find('.vq-duration').attr('data-video-id',vid).text('—');
+      }
+
+      // 3) اکتیو کردن آیتم
+      $pl.find(".vq-item.is-active").removeClass("is-active");
+      $it.addClass("is-active");
+
+      // 4) نمایش پنل مرتبط (کوییز/نظرسنجی) و مخفی کردن بقیه
+      $("#vq-panels .vq-panel").hide();
+      $('#vq-panels .vq-panel[data-panel="'+vid+'"]').show();
+
+      // 5) اسکرول اگر موبایل بود (اختیاری)
+      // $('html,body').animate({scrollTop: $('.vq-player-wrap').offset().top - 60}, 300);
+    });
+  }
+});
+
+jQuery(function($){
   function updateProgress(card, percent){ card.find('.vq-progress-bar').css('width', percent+'%'); }
   $(".vq-player").on("ended",function(){
     var card=$(this).closest('.vq-step-card');
@@ -25,10 +71,12 @@ jQuery(function($){
       }
     });
   });
-  $(".vq-survey-rating .star").on("click",function(){
-    var wrap=$(this).parent(),vid=wrap.data("video"),rate=$(this).data("value");
-    wrap.find(".star").removeClass("active"); $(this).prevAll().addBack().addClass("active");
-    $.post(vqAjax.ajaxUrl,{action:"vq_survey_rate",nonce:vqAjax.nonce,video_id:vid,rate:rate});
+});
+jQuery(function($){
+  $("#vq-main-player").on("ended",function(){
+    var vid=$(this).data("video-id");
+    var panel=$("#vq-panels .vq-panel[data-panel='"+vid+"']");
+    if(panel.length){ panel.find(".vq-start-quiz").show(); }
   });
 });
 
@@ -60,29 +108,19 @@ jQuery(function($){
 });
 
 
-/* === Prevent Seek & Show Duration (non-breaking) === */
-jQuery(function($){
-  function vqFmt(sec){sec=Math.floor(sec||0);var h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return (h>0?(h+":"+(m<10?"0":"")):"")+m+":"+(s<10?"0":"")+s;}
-  $(".vq-player.vq-no-seek").each(function(){
-    var v=this,$v=$(this),last=0,lock=false,id=$v.data("video-id");
-    v.addEventListener("loadedmetadata",function(){ $('.vq-duration[data-video-id="'+id+'"]').text(vqFmt(v.duration)); });
-    v.addEventListener("seeking",function(){ if(lock) return; lock=true; v.currentTime=last; lock=false; });
-    v.addEventListener("timeupdate",function(){ last=v.currentTime; });
-    $v.on("keydown",function(e){var k=e.key.toLowerCase(); if(['arrowleft','arrowright','home','end','j','l'].includes(k)){e.preventDefault();e.stopPropagation();}});
-    $v.on("mousedown touchstart",function(){ setTimeout(function(){ v.currentTime=last; },0); });
-  });
-});
 
 
-/* === Video rating average update === */
+/* === Video rating total update === */
 jQuery(function($){
   $(document).on('click','.vq-video-rating .star',function(){
     var $s=$(this), val=$s.data('value'), wrap=$s.closest('.vq-video-rate-wrap'), vid=wrap.find('.vq-video-rating').data('video');
     $s.siblings().removeClass('active'); $s.prevAll().addBack().addClass('active');
     $.post(vqAjax.ajaxUrl,{action:'vq_rate_video',nonce:vqAjax.nonce,video_id:vid,rate:val},function(res){
         if(res && res.success){
-          wrap.find('.vq-avg').text(res.data.avg);
+          wrap.find('.vq-sum').text(res.data.sum);
           wrap.find('.vq-count').text(res.data.count);
+          $('#vq-playlist .vq-item[data-vid="'+vid+'"]').data('sum',res.data.sum).data('count',res.data.count).find('.vq-item-sum').text(res.data.sum);
+          if($('#vq-main-player').data('video-id')==vid){ $('.vq-video-meta .vq-sum').text(res.data.sum); $('.vq-video-meta .vq-count').text(res.data.count); }
         }
       });
     });
@@ -94,10 +132,10 @@ jQuery(function($){
     var wrap=$(this).closest('.vq-step-card');
     // آپدیت نشان میانگین در هدر کارت اگر وجود داشت
       setTimeout(function(){
-        var avgText = wrap.find('.vq-video-rate-wrap .vq-avg').text();
-        if(avgText){
-          if(wrap.find('.vq-avg-badge').length){ wrap.find('.vq-avg-badge').text(avgText+'★'); }
-          else { wrap.find('.vq-step-header').append('<span class="vq-avg-badge">'+avgText+'★</span>'); }
+        var sumText = wrap.find('.vq-video-rate-wrap .vq-sum').text();
+        if(sumText){
+          if(wrap.find('.vq-sum-badge').length){ wrap.find('.vq-sum-badge').text(sumText+'★'); }
+          else { wrap.find('.vq-step-header').append('<span class="vq-sum-badge">'+sumText+'★</span>'); }
         }
       }, 200);
   });
@@ -111,10 +149,10 @@ jQuery(function($){
     $.post(vqAjax.ajaxUrl,{action:'vq_get_rating',nonce:vqAjax.nonce,video_id:vid},function(res){
         if(res && res.success){
           var wrap=$('.vq-video-rate-wrap').has('[data-video="'+vid+'"]');
-          wrap.find('.vq-avg').text(res.data.avg);
+          wrap.find('.vq-sum').text(res.data.sum);
           wrap.find('.vq-count').text(res.data.count);
           var card=wrap.closest('.vq-video-item');
-          if(card.find('.vq-avg-badge').length){ card.find('.vq-avg-badge').text(res.data.avg+'★'); }
+          if(card.find('.vq-sum-badge').length){ card.find('.vq-sum-badge').text(res.data.sum+'★'); }
         }
       });
     });
