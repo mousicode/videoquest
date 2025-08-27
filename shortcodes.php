@@ -182,3 +182,4 @@ function vq_top_videos_shortcode($atts){
   echo '</div>';
   return ob_get_clean();
 }
+add_shortcode('vq_top_videos','vq_top_videos_shortcode');

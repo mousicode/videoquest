@@ -159,39 +159,3 @@ video.vq-no-seek::-webkit-media-controls-current-time-display,
 video.vq-no-seek::-webkit-media-controls-time-remaining-display {
   display: none !important;
 }
-
-/* === Gallery layout === */
-.vq-gallery {
-  display: flex;
-  flex-direction: row-reverse;
-  gap: 20px;
-  align-items: flex-start;
-}
-.vq-gallery-player {
-  flex: 1;
-}
-.vq-gallery-player video {
-  width: 100%;
-  border-radius: var(--vq-radius);
-}
-.vq-gallery-list {
-  width: 280px;
-  max-height: 600px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.vq-gallery-item {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  gap: 8px;
-}
-.vq-gallery-item img {
-  width: 80px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 4px;
-}
-}
