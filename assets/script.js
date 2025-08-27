@@ -152,3 +152,19 @@ jQuery(function($){
     unlockNext($(this).closest('.vq-step-card'));
   });
 });
+
+/* === Gallery interaction === */
+jQuery(function($){
+  $(document).on('click','.vq-gallery-item',function(e){
+    e.preventDefault();
+    var item=$(this);
+    var src=item.data('src');
+    var player=$('#vq-gallery-player');
+    if(src && player.length){
+      player.find('source').attr('src',src);
+      player[0].load();
+      player[0].play();
+    }
+    item.addClass('active').siblings().removeClass('active');
+  });
+});
