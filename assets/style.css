@@ -174,9 +174,6 @@ video.vq-no-seek::-webkit-media-controls-time-remaining-display {
   width: 100%;
   border-radius: var(--vq-radius);
 }
-.vq-gallery-player .vq-step-card {
-  margin: 0;
-}
 .vq-gallery-list {
   width: 280px;
   max-height: 600px;
@@ -190,12 +187,6 @@ video.vq-no-seek::-webkit-media-controls-time-remaining-display {
   align-items: center;
   cursor: pointer;
   gap: 8px;
-  padding: 4px;
-  border: 1px solid var(--vq-border);
-  border-radius: var(--vq-radius);
-}
-.vq-gallery-item.active {
-  background: #f3f4f6;
 }
 .vq-gallery-item img {
   width: 80px;
@@ -203,6 +194,4 @@ video.vq-no-seek::-webkit-media-controls-time-remaining-display {
   object-fit: cover;
   border-radius: 4px;
 }
-.vq-gallery-title {
-  font-size: .9rem;
 }

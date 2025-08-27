@@ -149,11 +149,5 @@ jQuery(function($){
   $(document).on('click','.vq-gallery-item',function(e){
     e.preventDefault();
     var item=$(this);
-    var vid=item.data('video-id');
-    var tpl=$('#vq-gallery-content-'+vid);
-    if(tpl.length){
-      $('#vq-gallery-main').html(tpl.html());
-    }
-    item.addClass('active').siblings().removeClass('active');
   });
 });
