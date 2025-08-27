@@ -1,249 +1,134 @@
 jQuery(function($){
-  const $pl = $("#vq-playlist");
-  const $v  = $("#vq-main-player");
-  const $t  = $("#vq-now-title");
+  const $playlist = $('#vq-playlist');
+  const $player   = $('#vq-main-player');
+  const $title    = $('#vq-now-title');
 
-  if($pl.length && $v.length){
-    $pl.on("click", ".vq-item", function(){
-      const $it   = $(this);
-      const src   = $it.data("src");
-      const vid   = $it.data("vid");
-      const title = $it.data("title")||'';
+  // === Playlist layout ===
+  if($playlist.length && $player.length){
+    $playlist.on('click','.vq-item', function(){
+      const $it = $(this);
+      const src = $it.data('src');
+      const vid = $it.data('vid');
+      const title = $it.data('title') || '';
+      const wasPaused = $player[0].paused;
+      $player.find('source').attr('src', src);
+      $player.attr('data-video-id', vid)[0].load();
+      if(!wasPaused){ $player[0].play().catch(()=>{}); }
+      $title.text(title);
+      $playlist.find('.vq-item.is-active').removeClass('is-active');
+      $it.addClass('is-active');
+      $('#vq-panels .vq-panel').hide();
+      const $panel = $('#vq-panels .vq-panel[data-panel="'+vid+'"]').show();
+      $panel.find('.vq-quiz-step, .vq-survey-step').hide();
+    });
 
-      // 1) سوییچ سورس و شناسه ویدئو
-      if(src){
-        const wasPaused = $v[0].paused;
-        $v.find("source").attr("src", src);
-        $v.attr("data-video-id", vid);
-        $v[0].load();
-        if (!wasPaused) { $v[0].play().catch(()=>{}); } else { $v[0].play().catch(()=>{}); }
-      }
-
-      // 2) عنوان
-      if($t.length) $t.text(title);
-
-      // 3) اکتیو کردن آیتم
-      $pl.find(".vq-item.is-active").removeClass("is-active");
-      $it.addClass("is-active");
-
-      // 4) نمایش پنل مرتبط (کوییز/نظرسنجی) و مخفی کردن بقیه
-      $("#vq-panels .vq-panel").hide();
-      $('#vq-panels .vq-panel[data-panel="'+vid+'"]').show();
-
-      // 5) اسکرول اگر موبایل بود (اختیاری)
-      // $('html,body').animate({scrollTop: $('.vq-player-wrap').offset().top - 60}, 300);
+    $player.on('ended', function(){
+      const vid = $(this).data('video-id');
+      $.post(vqAjax.ajaxUrl,{action:'vq_mark_viewed',nonce:vqAjax.nonce,video_id:vid});
+      $('#vq-panels .vq-panel[data-panel="'+vid+'"]').find('.vq-quiz-step').slideDown();
     });
   }
-});
 
-jQuery(function($){
   function updateProgress(card, percent){ card.find('.vq-progress-bar').css('width', percent+'%'); }
-  $(".vq-player").on("ended",function(){
-    var card=$(this).closest('.vq-step-card');
+
+  // === Accordion layout ===
+  $(document).on('ended','.vq-player', function(){
+    const $v = $(this), card = $v.closest('.vq-step-card');
     updateProgress(card,33);
-    $(this).siblings(".vq-start-quiz").show();
-    $.post(vqAjax.ajaxUrl,{action:"vq_mark_viewed",nonce:vqAjax.nonce,video_id:$(this).data("video-id")},function(res){
-      if(res&&res.success&&res.data&&res.data.awarded){
-        alert('شما '+res.data.awarded+' امتیاز دریافت کردید! امتیاز کل: '+res.data.total);
-      }
+    card.find('.vq-start-quiz').show();
+    $.post(vqAjax.ajaxUrl,{action:'vq_mark_viewed',nonce:vqAjax.nonce,video_id:$v.data('video-id')});
+  });
+
+  $(document).on('click','.vq-start-quiz', function(){
+    const card = $(this).closest('.vq-step-card');
+    $('#'+$(this).data('target')).slideDown();
+    $(this).hide();
+    updateProgress(card,66);
+  });
+
+  // === Quiz submit (shared) ===
+  $(document).on('click','.vq-quiz-submit', function(){
+    const btn = $(this);
+    const vid = btn.data('video');
+    const answers = {};
+    btn.closest('.vq-quiz-step').find('.vq-q').each(function(i,q){
+      answers[i] = $(q).find('input:checked').val();
     });
-  });
-  $(".vq-start-quiz").on("click",function(){
-    $("#"+$(this).data("target")).slideDown(); $(this).hide();
-    updateProgress($(this).closest('.vq-step-card'),66);
-  });
-  $(".vq-quiz-submit").on("click",function(){
-    var btn=$(this),vid=btn.data("video"),answers={};
-    btn.closest(".vq-quiz-step").find(".vq-q").each(function(i,q){ answers[i]=$(q).find("input:checked").val(); });
-    $.post(vqAjax.ajaxUrl,{action:"vq_submit_quiz",nonce:vqAjax.nonce,video_id:vid,answers:answers},function(res){
+    $.post(vqAjax.ajaxUrl,{action:'vq_submit_quiz',nonce:vqAjax.nonce,video_id:vid,answers:answers}, function(res){
       if(res.success){
-        btn.siblings(".vq-quiz-feedback").show().html(res.data.passed?"✅ ("+res.data.score+"/"+res.data.total+")":"❌ "+res.data.score+"/"+res.data.total);
-        btn.hide(); btn.closest(".vq-quiz-step").siblings(".vq-survey-step").slideDown();
-        updateProgress(btn.closest('.vq-step-card'),100);
+        const fb = btn.siblings('.vq-quiz-feedback').show()
+          .toggleClass('success',res.data.passed)
+          .toggleClass('fail',!res.data.passed)
+          .text(res.data.passed? 'قبول شدید ('+res.data.score+'/'+res.data.total+')' : 'رد شدید ('+res.data.score+'/'+res.data.total+')');
+        if(res.data.passed){
+          btn.hide();
+          btn.closest('.vq-quiz-step').slideUp().siblings('.vq-survey-step').slideDown();
+          const card = btn.closest('.vq-step-card');
+          if(card.length){ updateProgress(card,100); }
+        }
       }
     });
   });
-  $(".vq-survey-rating .star").on("click",function(){
-    var wrap=$(this).parent(),vid=wrap.data("video"),rate=$(this).data("value");
-    wrap.find(".star").removeClass("active"); $(this).prevAll().addBack().addClass("active");
-    $.post(vqAjax.ajaxUrl,{action:"vq_survey_rate",nonce:vqAjax.nonce,video_id:vid,rate:rate});
-  });
-});
 
-/* === VQ Accordion toggle (minimal) === */
-jQuery(function($){
-  $(document).on('click','.vq-step-header',function(e){
-    var card=$(this).closest('.vq-step-card');
-    var body=card.find('.vq-step-body');
-    body.stop(true,true).slideToggle(200);
+  // === Rating ===
+  $(document).on('click','.vq-video-rating .star', function(){
+    const $s = $(this);
+    const wrap = $s.closest('.vq-video-rate-wrap');
+    const vid  = wrap.find('.vq-video-rating').data('video');
+    const val  = $s.data('value');
+    $.post(vqAjax.ajaxUrl,{action:'vq_rate_video',nonce:vqAjax.nonce,video_id:vid,rate:val}, function(res){
+      if(res && res.success){
+        $s.prevAll().addBack().addClass('active');
+        $s.nextAll().removeClass('active');
+        wrap.find('.vq-avg').text(res.data.avg);
+        wrap.find('.vq-count').text(res.data.count);
+      }else if(res && res.data && res.data.message){
+        alert(res.data.message);
+      }
+    });
+  });
+
+  // === Accordion toggle ===
+  $(document).on('click','.vq-step-header', function(){
+    const card = $(this).closest('.vq-step-card');
     card.toggleClass('open');
+    card.find('.vq-step-body').stop(true,true).slideToggle(200);
   });
-  // open first card by default
-  var first=$('.vq-step-card').first();
-  if(first.length){ first.addClass('open'); first.find('.vq-step-body').show(); }
-});
+  const first = $('.vq-step-card').first();
+  if(first.length){ first.addClass('open').find('.vq-step-body').show(); }
 
-
-/* === Prevent Seek & Show Duration (non-breaking) === */
-jQuery(function($){
-  function vqFmt(sec){sec=Math.floor(sec||0);var h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return (h>0?(h+":"+(m<10?"0":"")):"")+m+":"+(s<10?"0":"")+s;}
-  $(".vq-player.vq-no-seek").each(function(){
-    var v=this,$v=$(this),last=0,lock=false,id=$v.data("video-id");
-    v.addEventListener("loadedmetadata",function(){ $('.vq-duration[data-video-id="'+id+'"]').text(vqFmt(v.duration)); });
-    v.addEventListener("seeking",function(){ if(lock) return; lock=true; v.currentTime=last; lock=false; });
-    v.addEventListener("timeupdate",function(){ last=v.currentTime; });
-    $v.on("keydown",function(e){var k=e.key.toLowerCase(); if(['arrowleft','arrowright','home','end','j','l'].includes(k)){e.preventDefault();e.stopPropagation();}});
-    $v.on("mousedown touchstart",function(){ setTimeout(function(){ v.currentTime=last; },0); });
-  });
-});
-
-
-v.addEventListener("seeking",function(){ if(lock) return; lock=true; v.currentTime=last; lock=false; });
-    v.addEventListener("timeupdate",function(){ last=v.currentTime; });
-    $v.on("keydown",function(e){var k=e.key.toLowerCase(); if(['arrowleft','arrowright','home','end','j','l'].includes(k)){e.preventDefault();e.stopPropagation();}});
-    $v.on("mousedown touchstart",function(){ setTimeout(function(){ v.currentTime=last; },0); });
-  });
-});
-
-
-/* === Video rating average update === */
-jQuery(function($){
-  $(document).on('click','.vq-video-rating .star',function(){
-    var $s=$(this), val=$s.data('value'), wrap=$s.closest('.vq-video-rate-wrap'), vid=wrap.find('.vq-video-rating').data('video');
-    $s.siblings().removeClass('active'); $s.prevAll().addBack().addClass('active');
-    $.post(vqAjax.ajaxUrl,{action:'vq_rate_video',nonce:vqAjax.nonce,video_id:vid,rate:val},function(res){
-        if(res && res.success){
-          wrap.find('.vq-avg').text(res.data.avg);
-          wrap.find('.vq-count').text(res.data.count);
-        }
-      });
-    });
-  });
-
-
-jQuery(function($){
-  $(document).on('click','.vq-video-rating .star',function(){
-    var wrap=$(this).closest('.vq-step-card');
-    // آپدیت نشان میانگین در هدر کارت اگر وجود داشت
-      setTimeout(function(){
-        var avgText = wrap.find('.vq-video-rate-wrap .vq-avg').text();
-        if(avgText){
-          if(wrap.find('.vq-avg-badge').length){ wrap.find('.vq-avg-badge').text(avgText+'★'); }
-          else { wrap.find('.vq-step-header').append('<span class="vq-avg-badge">'+avgText+'★</span>'); }
-        }
-      }, 200);
-  });
-});
-
-
-/* Fetch rating on load for every video */
-jQuery(function($){
-  $(".vq-video-rate-wrap .vq-video-rating").each(function(){
-    var vid=$(this).data('video');
-    $.post(vqAjax.ajaxUrl,{action:'vq_get_rating',nonce:vqAjax.nonce,video_id:vid},function(res){
-        if(res && res.success){
-          var wrap=$('.vq-video-rate-wrap').has('[data-video="'+vid+'"]');
-          wrap.find('.vq-avg').text(res.data.avg);
-          wrap.find('.vq-count').text(res.data.count);
-          var card=wrap.closest('.vq-video-item');
-          if(card.find('.vq-avg-badge').length){ card.find('.vq-avg-badge').text(res.data.avg+'★'); }
-        }
-      });
-    });
-  });
-
-
-/* Duration writer with fallback */
-jQuery(function($){
-  $(".vq-player").each(function(){
-    var v=this,$v=$(this),id=$v.data("video-id")||$v.data("videoid");
-    function writeDur(){ if(!isNaN(v.duration) && isFinite(v.duration) && v.duration>0){ $('.vq-duration[data-video-id="'+id+'"]').text(vqFmt(v.duration)); } }
-    v.addEventListener("loadedmetadata", writeDur);
-    v.addEventListener("durationchange", writeDur);
-    setTimeout(function(){
-      if (isNaN(v.duration) || !isFinite(v.duration) || v.duration===0){
-        var wasPaused=v.paused; v.muted=true;
-        v.play().then(function(){ setTimeout(function(){ v.pause(); if(wasPaused) v.muted=false; writeDur(); },120); }).catch(function(){});
-      }
-    },300);
-  });
-});
-
-
-/* Unlock next video without refresh */
-jQuery(function($){
-  function unlockNext(card){
-    var next=card.next('.vq-step-card');
+  // === Next video unlock ===
+  $(document).on('click','.vq-next-video', function(e){
+    e.preventDefault();
+    const card = $(this).closest('.vq-step-card');
+    const next = card.next('.vq-step-card');
     if(!next.length) return;
     next.find('.vq-locked').hide();
     next.find('.vq-video-wrap').show();
-    $('html,body').animate({scrollTop: next.offset().top-60},400);
-  }
-  $(document).on('click','.vq-next-video',function(e){
-    e.preventDefault();
-    unlockNext($(this).closest('.vq-step-card'));
+    $('html,body').animate({scrollTop:next.offset().top-60},400);
   });
-});
 
-// === VQ-PLAYLIST-PATCH: Show quiz after video ends ===
-(function(){
-  var $main = jQuery('#vq-main-player');
-  if($main.length){
-    $main.off('ended.vqpl').on('ended.vqpl', function(){
-      var vid = jQuery(this).data('video-id');
-      var $panel = jQuery('#vq-panels .vq-panel[data-panel="'+vid+'"]');
-      $panel.find('.vq-quiz-step').slideDown();
+  // === Prevent seek & duration ===
+  function vqFmt(sec){sec=Math.floor(sec||0);var h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return (h>0?(h+":"+(m<10?"0":"")):"")+m+":"+(s<10?"0":"")+s;}
+  $('.vq-player.vq-no-seek').each(function(){
+    const v=this,$v=$(this); let last=0,lock=false,id=$v.data('video-id');
+    v.addEventListener('loadedmetadata',function(){ $('.vq-duration[data-video-id="'+id+'"]').text(vqFmt(v.duration)); });
+    v.addEventListener('seeking',function(){ if(lock) return; lock=true; v.currentTime=last; lock=false; });
+    v.addEventListener('timeupdate',function(){ last=v.currentTime; });
+    $v.on('keydown',function(e){var k=e.key.toLowerCase(); if(['arrowleft','arrowright','home','end','j','l'].includes(k)){e.preventDefault();e.stopPropagation();}});
+    $v.on('mousedown touchstart',function(){ setTimeout(function(){ v.currentTime=last; },0); });
+  });
+
+  // === Fetch rating on load ===
+  $('.vq-video-rate-wrap .vq-video-rating').each(function(){
+    const vid = $(this).data('video');
+    const wrap = $(this).closest('.vq-video-rate-wrap');
+    $.post(vqAjax.ajaxUrl,{action:'vq_get_rating',nonce:vqAjax.nonce,video_id:vid}, function(res){
+      if(res && res.success){
+        wrap.find('.vq-avg').text(res.data.avg);
+        wrap.find('.vq-count').text(res.data.count);
+      }
     });
-  }
-})();
-
-// === VQ-PLAYLIST-PATCH: Rating stars in playlist layout ===
-jQuery(document).on('click', '.vq-survey-rating .star, .vq-video-rating .star', function(){
-  var $s = jQuery(this), wrap = $s.closest('.vq-video-rate-wrap').length ? $s.closest('.vq-video-rate-wrap') : $s.parent();
-  var vid = wrap.find('.vq-video-rating').data('video') || wrap.data('video');
-  var rate = $s.data('value');
-  wrap.find('.star').removeClass('active'); $s.prevAll().addBack().addClass('active');
-  jQuery.post(vqAjax.ajaxUrl, {action:'vq_rate_video', nonce:vqAjax.nonce, video_id:vid, rate:rate}, function(res){
-    if(res && res.success){
-      var box = jQuery('.vq-video-rate-wrap').has('[data-video="'+vid+'"]');
-      box.find('.vq-avg').text(res.data.avg);
-      box.find('.vq-count').text(res.data.count);
-      var item = jQuery('#vq-playlist .vq-item[data-vid="'+vid+'"]');
-      if(item.length && item.find('.vq-sum').length){ item.find('.vq-sum').text(res.data.avg); }
-    }
   });
 });
 
-// === VQ-CACHEBUST-MARK === (should appear once in console)
-console.log('VQ patch active:', new Date().toISOString());
-
-// === VQ-PLAYLIST-PATCH: Show quiz after video ends ===
-(function(){
-  var $main = jQuery('#vq-main-player');
-  if($main.length && !$main.data('vqpl-bound')){
-    $main.data('vqpl-bound', true).off('ended.vqpl').on('ended.vqpl', function(){
-      var vid = jQuery(this).data('video-id');
-      var $panel = jQuery('#vq-panels .vq-panel[data-panel="'+vid+'"]');
-      $panel.find('.vq-quiz-step').slideDown();
-    });
-  }
-})();
-
-// === VQ-PLAYLIST-PATCH: Rating stars in playlist layout ===
-jQuery(document).off('click.vqplstars')
-.on('click.vqplstars', '.vq-survey-rating .star, .vq-video-rating .star', function(){
-  var $s = jQuery(this),
-      wrap = $s.closest('.vq-video-rate-wrap').length ? $s.closest('.vq-video-rate-wrap') : $s.parent(),
-      vid  = wrap.find('.vq-video-rating').data('video') || wrap.data('video'),
-      rate = $s.data('value');
-  wrap.find('.star').removeClass('active'); $s.prevAll().addBack().addClass('active');
-  jQuery.post(vqAjax.ajaxUrl, {action:'vq_rate_video', nonce:vqAjax.nonce, video_id:vid, rate:rate}, function(res){
-    if(res && res.success){
-      var box  = jQuery('.vq-video-rate-wrap').has('[data-video="'+vid+'"]');
-      box.find('.vq-avg').text(res.data.avg);
-      box.find('.vq-count').text(res.data.count);
-      var item = jQuery('#vq-playlist .vq-item[data-vid="'+vid+'"]');
-      if(item.length && item.find('.vq-sum').length){ item.find('.vq-sum').text(res.data.avg); }
-    }
-  });
-});

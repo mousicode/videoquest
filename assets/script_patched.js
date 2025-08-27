@@ -15,7 +15,9 @@ jQuery(function($){
     btn.closest(".vq-quiz-step").find(".vq-q").each(function(i,q){ answers[i]=$(q).find("input:checked").val(); });
     $.post(vqAjax.ajaxUrl,{action:"vq_submit_quiz",nonce:vqAjax.nonce,video_id:vid,answers:answers},function(res){
       if(res.success){
-        btn.siblings(".vq-quiz-feedback").show().html(res.data.passed?"✅ ("+res.data.score+"/"+res.data.total+")":"❌ "+res.data.score+"/"+res.data.total);
+        var fb=btn.siblings(".vq-quiz-feedback").show();
+        fb.toggleClass('success',res.data.passed).toggleClass('fail',!res.data.passed)
+          .html(res.data.passed?"✅ ("+res.data.score+"/"+res.data.total+")":"❌ "+res.data.score+"/"+res.data.total);
         btn.hide(); btn.closest(".vq-quiz-step").siblings(".vq-survey-step").slideDown();
         updateProgress(btn.closest('.vq-step-card'),100);
       }
@@ -90,7 +92,7 @@ jQuery(function($){
     $s.siblings().removeClass('active'); $s.prevAll().addBack().addClass('active');
     $.post(vqAjax.ajaxUrl,{action:'vq_rate_video',nonce:vqAjax.nonce,video_id:vid,rate:val},function(res){
       if(res && res.success){
-        wrap.find('.vq-avg b').text(res.data.avg);
+        wrap.find('.vq-avg').text(res.data.avg);
         wrap.find('.vq-count').text(' ('+res.data.count+' رای)');
       }
     });
@@ -103,7 +105,7 @@ jQuery(function($){
     var wrap=$(this).closest('.vq-step-card');
     // آپدیت نشان میانگین در هدر کارت اگر وجود داشت
     setTimeout(function(){
-      var avgText = wrap.find('.vq-video-rate-wrap .vq-avg b').text();
+      var avgText = wrap.find('.vq-video-rate-wrap .vq-avg').text();
       if(avgText){ 
         if(wrap.find('.vq-avg-badge').length){ wrap.find('.vq-avg-badge').text(avgText+'★'); }
         else { wrap.find('.vq-step-header').append('<span class="vq-avg-badge">'+avgText+'★</span>'); }
@@ -120,7 +122,7 @@ jQuery(function($){
     $.post(vqAjax.ajaxUrl,{action:'vq_get_rating',nonce:vqAjax.nonce,video_id:vid},function(res){
       if(res && res.success){
         var wrap=$('.vq-video-rate-wrap').has('[data-video="'+vid+'"]');
-        wrap.find('.vq-avg b').text(res.data.avg);
+        wrap.find('.vq-avg').text(res.data.avg);
         wrap.find('.vq-count').text(' ('+res.data.count+' رای)');
         var card=wrap.closest('.vq-step-card');
         if(card.find('.vq-avg-badge').length){ card.find('.vq-avg-badge').text(res.data.avg+'★'); }
