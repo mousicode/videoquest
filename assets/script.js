@@ -1,4 +1,42 @@
 jQuery(function($){
+  const $pl = $("#vq-playlist");
+  const $v  = $("#vq-main-player");
+  const $t  = $("#vq-now-title");
+
+  if($pl.length && $v.length){
+    $pl.on("click", ".vq-item", function(){
+      const $it   = $(this);
+      const src   = $it.data("src");
+      const vid   = $it.data("vid");
+      const title = $it.data("title")||'';
+
+      // 1) سوییچ سورس و شناسه ویدئو
+      if(src){
+        const wasPaused = $v[0].paused;
+        $v.find("source").attr("src", src);
+        $v.attr("data-video-id", vid);
+        $v[0].load();
+        if (!wasPaused) { $v[0].play().catch(()=>{}); } else { $v[0].play().catch(()=>{}); }
+      }
+
+      // 2) عنوان
+      if($t.length) $t.text(title);
+
+      // 3) اکتیو کردن آیتم
+      $pl.find(".vq-item.is-active").removeClass("is-active");
+      $it.addClass("is-active");
+
+      // 4) نمایش پنل مرتبط (کوییز/نظرسنجی) و مخفی کردن بقیه
+      $("#vq-panels .vq-panel").hide();
+      $('#vq-panels .vq-panel[data-panel="'+vid+'"]').show();
+
+      // 5) اسکرول اگر موبایل بود (اختیاری)
+      // $('html,body').animate({scrollTop: $('.vq-player-wrap').offset().top - 60}, 300);
+    });
+  }
+});
+
+jQuery(function($){
   function updateProgress(card, percent){ card.find('.vq-progress-bar').css('width', percent+'%'); }
   $(".vq-player").on("ended",function(){
     var card=$(this).closest('.vq-step-card');
