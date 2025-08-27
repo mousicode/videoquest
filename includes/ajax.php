@@ -71,11 +71,10 @@ function vq_rate_video(){ // vq_rate_video_hardened
 
     $sum = 0; $cnt = 0;
     foreach($ratings as $uid=>$r){ $sum += intval($r); $cnt++; }
-    $avg = $cnt ? round($sum/$cnt, 2) : 0;
-    update_post_meta($post_id, 'vq_video_rating_avg', $avg);
+    update_post_meta($post_id, 'vq_video_rating_sum', $sum);
     update_post_meta($post_id, 'vq_video_rating_count', $cnt);
 
-    wp_send_json_success(array('avg'=>$avg,'count'=>$cnt));
+    wp_send_json_success(array('sum'=>$sum,'count'=>$cnt));
 }
 
 
@@ -89,9 +88,8 @@ function vq_get_rating(){
     if (!is_array($ratings)) $ratings = array();
     $sum = 0; $cnt = 0;
     foreach($ratings as $r){ $sum += intval($r); $cnt++; }
-    $avg = $cnt ? round($sum/$cnt, 2) : 0;
-    update_post_meta($post_id, 'vq_video_rating_avg', $avg);
+    update_post_meta($post_id, 'vq_video_rating_sum', $sum);
     update_post_meta($post_id, 'vq_video_rating_count', $cnt);
-    wp_send_json_success(array('avg'=>$avg,'count'=>$cnt));
+    wp_send_json_success(array('sum'=>$sum,'count'=>$cnt));
     wp_die();
 }
